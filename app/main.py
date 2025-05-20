@@ -7,6 +7,11 @@ import sys
 def match_pattern(input_line, pattern):
     if len(pattern) == 1:
         return pattern in input_line
+    elif pattern == "\d":
+        for char in input_line:
+            if "0" <= char <= "9":
+                return True
+        return False
     else:
         raise RuntimeError(f"Unhandled pattern: {pattern}")
 
@@ -24,8 +29,10 @@ def main():
 
     # Uncomment this block to pass the first stage
     if match_pattern(input_line, pattern):
+        print("exit 0", file=sys.stderr)
         exit(0)
     else:
+        print("exit 1", file=sys.stderr)
         exit(1)
 
 
