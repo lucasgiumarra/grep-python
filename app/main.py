@@ -17,6 +17,16 @@ def match_pattern(input_line, pattern):
             if "A" <= char <= "Z" or "a" <= char <= "z" or char == "_":
                 return True
         return False
+    elif "[" in pattern and "]" in pattern:
+        for p in pattern:
+            if p == "[":
+                continue
+            elif p == "]":
+                break
+            for char in input_line:
+                if p == char:
+                    return True
+        return False
     else:
         raise RuntimeError(f"Unhandled pattern: {pattern}")
 
