@@ -20,5 +20,5 @@ jobs:
           python-version: "3.11"
 
       - name: Run app
-        run: python app/main.py
+        run: echo -n "apple" | python app/main.py -E "a"
 
