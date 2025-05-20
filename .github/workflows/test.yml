@@ -23,5 +23,5 @@ jobs:
         run: echo -n "apple" | python app/main.py -E "a"
 
       - name: Run test 2 
-        run: echo -n "apple123" | ./your_program.sh -E "\d"
+        run: echo -n "apple123" | python app/main.py -E "\d"
 
