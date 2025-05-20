@@ -12,6 +12,11 @@ def match_pattern(input_line, pattern):
             if "0" <= char <= "9":
                 return True
         return False
+    elif pattern == "\w":
+        for char in input_line:
+            if "A" <= char <= "Z" or "a" <= char <= "z" or char == "_":
+                return True
+        return False
     else:
         raise RuntimeError(f"Unhandled pattern: {pattern}")
 

@@ -25,3 +25,6 @@ jobs:
       - name: Run test 2 
         run: echo -n "apple123" | python app/main.py -E "\d"
 
+      - name: Run test 3 
+        run: echo -n "alpha-num3ric" | python app/main.py -E "\w"
+
