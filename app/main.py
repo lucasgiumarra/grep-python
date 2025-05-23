@@ -24,21 +24,25 @@ def match_pattern(input_line, pattern):
         for p in pattern:
             if p == "[" or p == "]" or p == "^":
                 continue
-            for char in input_line:
-                if p != char:
-                    return True 
-        return False 
+            if p not in input_line:
+                return True
+        return False
     # positive character groups
     elif "[" in pattern and "]" in pattern:
-        for p in pattern:
-            if p == "[":
-                continue
-            elif p == "]":
-                break
-            for char in input_line:
-                if p == char:
+        if "^" in pattern:
+            for p in pattern:
+                if p == "[" or p == "]" or p == "^":
+                    continue
+                if p not in input_line:
                     return True
-        return False
+            return False
+        else:
+            for p in pattern:
+                if p == "[" or p == "]":
+                    continue
+                if p in input_line:
+                    return True
+            return False
     else:
         raise RuntimeError(f"Unhandled pattern: {pattern}")
 
