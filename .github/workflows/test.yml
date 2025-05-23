@@ -31,3 +31,7 @@ jobs:
       - name: Run test 4 
         run: echo -n "apple" | python app/main.py -E "[abc]"
 
+      - name: Run test 5 
+        run: echo -n "apple" | python app/main.py -E "[^abc]"
+        run: echo -n "apple" | python app/main.py -E "[^bcd]"
+
