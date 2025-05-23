@@ -32,6 +32,7 @@ jobs:
         run: echo -n "apple" | python app/main.py -E "[abc]"
 
       - name: Run test 5 
-        run: echo -n "apple" | python app/main.py -E "[^abc]"
-        run: echo -n "apple" | python app/main.py -E "[^bcd]"
+        run: |
+         echo -n "apple" | python app/main.py -E "[^abc]"
+         echo -n "apple" | python app/main.py -E "[^bcd]"
 
