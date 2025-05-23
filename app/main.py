@@ -26,8 +26,8 @@ def match_pattern(input_line, pattern):
                 continue
             for char in input_line:
                 if p != char:
-                    return False
-        return True
+                    return True 
+        return False 
     # positive character groups
     elif "[" in pattern and "]" in pattern:
         for p in pattern:
