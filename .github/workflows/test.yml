@@ -42,5 +42,20 @@ jobs:
  
       - name: Run test 7 
         run: |
+         set +e  # Allow commands to fail without exiting
          echo -n "log" | python app/main.py -E "^log"
+         code1=$?
          echo -n "slog" | python app/main.py -E "^log"
+         code2=$?
+         set -e  # Re-enable exit on error
+         if [ $code1 -ne 0 ]; then
+           echo "Expected exit code 0 for 'log', got $code1"
+           exit 1
+         fi
+
+         if [ $code2 -ne 1 ]; then 
+           echo "Expected exit code 1 for 'slog', got $code2"
+           exit 1
+         fi
+
+         echo "Test passed: correct exit codes received"
