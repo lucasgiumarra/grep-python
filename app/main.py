@@ -14,7 +14,7 @@ def matchhere(pattern, input_line):
     if not pattern:
         return True
     if input_line and pattern_matches(pattern[0], input_line[0]):
-        return True
+        return matchhere(pattern[1:], input_line[1:])
     return False
 
 # def matchstar():
@@ -115,8 +115,8 @@ def main():
     print("Logs from your program will appear here!", file=sys.stderr)
 
     # Uncomment this block to pass the first stage
-    if match_pattern(input_line, pattern):
-    # if match(pattern, input_line):
+    # if match_pattern(input_line, pattern):
+    if match(pattern, input_line):
         print("pattern: " + pattern, file=sys.stderr)
         print("exit 0", file=sys.stderr)
         exit(0)
