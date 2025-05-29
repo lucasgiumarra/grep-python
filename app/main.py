@@ -23,6 +23,8 @@ def matchhere(pattern, input_line):
             return matchhere(rest, input_line[1:])
         return False
     if pattern.startswith("^"):
+        print("pattern[1:] -> " + pattern[1:], file=sys.stderr)
+        print("input_line -> " + input_line, file=sys.stderr)
         return matchhere(pattern[1:], input_line)
     if pattern.startswith("\d"):
         if input_line and input_line[0].isdigit():
