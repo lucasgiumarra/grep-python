@@ -3,8 +3,14 @@ import sys
 # import pyparsing - available if you need it!
 # import lark - available if you need it!
 
+
 def match(pattern, input_line):
     for i in range(len(input_line) + 1):
+        if pattern[0] == "^":
+            if matchhere(pattern, input_line):
+                return True
+            else:
+                return False
         if matchhere(pattern, input_line[i:]):
             return True
     return False
