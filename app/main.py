@@ -22,11 +22,11 @@ def matchhere(pattern, input_line):
         if (input_line[0] in group) != negate:
             return matchhere(rest, input_line[1:])
         return False
-    if pattern.startswith("\d"):
+    if pattern.startswith("\\d"):
         if input_line and input_line[0].isdigit():
             return matchhere(pattern[2:], input_line[1:])
         return False
-    if pattern.startswith("\w"):
+    if pattern.startswith("\\w"):
         if input_line and input_line[0].isalpha():
             return matchhere(pattern[2:], input_line[1:])
         return False
