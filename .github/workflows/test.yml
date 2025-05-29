@@ -38,5 +38,5 @@ jobs:
 
       - name: Run test 5 
         run: |
-         echo -n "1 apple" | python app/main.py -E '\d apple'
+         echo -n "1 apple" | python app/main.py -E "\d apple"
  
