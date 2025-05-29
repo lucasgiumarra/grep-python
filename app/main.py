@@ -13,6 +13,8 @@ def match(pattern, input_line):
 def matchhere(pattern, input_line):
     if not pattern:
         return True
+    if len(pattern) == 1:
+        return pattern in input_line
     if pattern.startswith("["):
         group, rest, negate = parse_char_group(pattern)
         if not input_line:
