@@ -16,12 +16,14 @@ def matchhere(pattern, input_line):
     if len(pattern) == 1:
         return pattern in input_line
     if pattern.startswith("["):
-        group, rest, negate = parse_char_group(pattern)
+        group, rest, negate_char_group = parse_char_group(pattern)
         if not input_line:
             return False
-        if (input_line[0] in group) != negate:
+        if (input_line[0] in group) != negate_char_group:
             return matchhere(rest, input_line[1:])
         return False
+    if pattern.startswith("^"):
+        return matchhere(pattern[1:], input_line)
     if pattern.startswith("\d"):
         if input_line and input_line[0].isdigit():
             return matchhere(pattern[2:], input_line[1:])
@@ -50,91 +52,6 @@ def parse_char_group(pattern):
         raise ValueError("Unterminated character group")
     rest = pattern[i+1:]
     return chars, rest, negate
-
-def pattern_matches(pattern, input_char):
-    if len(pattern) == 1:
-        return pattern in input_char
-    elif pattern == "\d":
-        for char in input_char:
-            if "0" <= char <= "9":
-                return True
-        return False
-    elif pattern == "\w":
-        for char in input_char:
-            if "A" <= char <= "Z" or "a" <= char <= "z" or char == "_":
-                return True
-        return False
-    # this negative character group logic must come before the positive group
-    # logic becuase otherwise a negative character group will run under a
-    # positive group logic
-    elif "[" in pattern and "]" in pattern and "^" in pattern:
-        for p in pattern:
-            if p == "[" or p == "]" or p == "^":
-                continue
-            if p not in input_char:
-                return True
-        return False
-    # positive character groups
-    elif "[" in pattern and "]" in pattern:
-        if "^" in pattern:
-            for p in pattern:
-                if p == "[" or p == "]" or p == "^":
-                    continue
-                if p not in input_char:
-                    return True
-            return False
-        else:
-            for p in pattern:
-                if p == "[" or p == "]":
-                    continue
-                if p in input_char:
-                    return True
-            return False
-    return False
-
-
-
-def match_pattern(input_line, pattern):
-    if len(pattern) == 1:
-        return pattern in input_line
-    elif pattern == "\d":
-        for char in input_line:
-            if "0" <= char <= "9":
-                return True
-        return False
-    elif pattern == "\w":
-        for char in input_line:
-            if "A" <= char <= "Z" or "a" <= char <= "z" or char == "_":
-                return True
-        return False
-    # this negative character group logic must come before the positive group
-    # logic becuase otherwise a negative character group will run under a
-    # positive group logic
-    elif "[" in pattern and "]" in pattern and "^" in pattern:
-        for p in pattern:
-            if p == "[" or p == "]" or p == "^":
-                continue
-            if p not in input_line:
-                return True
-        return False
-    # positive character groups
-    elif "[" in pattern and "]" in pattern:
-        if "^" in pattern:
-            for p in pattern:
-                if p == "[" or p == "]" or p == "^":
-                    continue
-                if p not in input_line:
-                    return True
-            return False
-        else:
-            for p in pattern:
-                if p == "[" or p == "]":
-                    continue
-                if p in input_line:
-                    return True
-            return False
-    else:
-        raise RuntimeError(f"Unhandled pattern: {pattern}")
 
 
 def main():

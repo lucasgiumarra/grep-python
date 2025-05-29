@@ -36,7 +36,10 @@ jobs:
          echo -n "apple" | python app/main.py -E "[^abc]"
          echo -n "apple" | python app/main.py -E "[^bcd]"
 
-      - name: Run test 5 
+      - name: Run test 6 
         run: |
          echo -n "1 apple" | python app/main.py -E "\d apple"
  
+      - name: Run test 7 
+        run: |
+         echo -n "log" | python app/main.py -E "^log"
