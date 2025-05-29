@@ -13,14 +13,44 @@ def match(pattern, input_line):
 def matchhere(pattern, input_line):
     if not pattern:
         return True
-    if input_line and pattern_matches(pattern[0], input_line[0]):
-        return matchhere(pattern[1:], input_line[1:])
+    if pattern.startswith("["):
+        group, rest, negate = parse_char_group(pattern)
+        if not input_line:
+            return False
+        if (input_line[0] in group) != negate:
+            return matchhere(rest, input_line[1:])
+        return False
+    if pattern.startswith("\d"):
+        if input_line and input_line[0].isdigit():
+            return matchhere(pattern[2:], input_line[1:])
+        return False
+    if pattern.startswith("\w"):
+        if input_line and input_line[0].isalpha():
+            return matchhere(pattern[2:], input_line[1:])
+        return False
     return False
 
 # def matchstar():
+def parse_char_group(pattern):
+    assert pattern[0] == "["
+    negate = False
+    i = 1
+    if pattern[i] == "^":
+        negate = True
+        i += 1
+    chars = set()
+    while i < len(pattern) and pattern[i] != "]":
+        chars.add(pattern[i])
+        i += 1
+    if i == len(pattern):
+        raise ValueError("Unterminated character group")
+    rest = pattern[i+1:]
+    return chars, rest, negate
 
 def pattern_matches(pattern, input_char):
-    if pattern == "\d":
+    if len(pattern) == 1:
+        return pattern in input_char
+    elif pattern == "\d":
         for char in input_char:
             if "0" <= char <= "9":
                 return True
