@@ -43,3 +43,4 @@ jobs:
       - name: Run test 7 
         run: |
          echo -n "log" | python app/main.py -E "^log"
+         echo -n "slog" | python app/main.py -E "^log"
