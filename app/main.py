@@ -7,10 +7,7 @@ import sys
 def match(pattern, input_line):
     for i in range(len(input_line) + 1):
         if pattern[0] == "^":
-            if matchhere(pattern, input_line):
-                return True
-            else:
-                return False
+            return matchhere(pattern[1:], input_line)
         if matchhere(pattern, input_line[i:]):
             return True
     return False
@@ -28,10 +25,6 @@ def matchhere(pattern, input_line):
         if (input_line[0] in group) != negate_char_group:
             return matchhere(rest, input_line[1:])
         return False
-    if pattern.startswith("^"):
-        print("pattern[1:] -> " + pattern[1:], file=sys.stderr)
-        print("input_line -> " + input_line, file=sys.stderr)
-        return matchhere(pattern[1:], input_line)
     if pattern.startswith("\d"):
         if input_line and input_line[0].isdigit():
             return matchhere(pattern[2:], input_line[1:])

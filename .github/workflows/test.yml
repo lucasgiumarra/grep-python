@@ -44,7 +44,7 @@ jobs:
         run: |
          set +e  # Allow commands to fail without exiting
          echo -n "log" | python app/main.py -E "^log"
-         code1=$?
+         code1=$? # $? holds the exit code of the last command that was run
          echo -n "slog" | python app/main.py -E "^log"
          code2=$?
          set -e  # Re-enable exit on error
