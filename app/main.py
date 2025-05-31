@@ -33,8 +33,8 @@ def matchhere(pattern, input_line):
         if input_line and input_line[0].isalpha():
             return matchhere(pattern[2:], input_line[1:])
         return False
-    if pattern[0] == "$" and input_line == "":
-        return True
+    if pattern[0] == "$" and pattern[1] == "":
+        return input_line == ""
     if pattern[0] == input_line[0]:
         return matchhere(pattern[1:], input_line[1:])
     return False
