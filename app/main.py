@@ -19,8 +19,8 @@ def matchhere(pattern, input_line):
 
     if not pattern:
         return True
-    if len(pattern) == 1:
-        return pattern in input_line
+    # if len(pattern) == 1:
+    #     return pattern in input_line
     if pattern.startswith("["):
         group, rest, negate_char_group = parse_char_group(pattern)
         if not input_line:
@@ -37,7 +37,7 @@ def matchhere(pattern, input_line):
             return matchhere(pattern[2:], input_line[1:])
         return False
     if pattern == "$" and input_line == "":
-        print(input_line == "")
+        print(input_line == "", file=sys.stderr)
         return input_line == ""
     if pattern[0] == input_line[0]:
         # print("pattern[1]: " + pattern[1], file=sys.stderr)
