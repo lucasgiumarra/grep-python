@@ -14,8 +14,8 @@ def match(pattern, input_line):
 
 
 def matchhere(pattern, input_line):
-    print("pattern[0]: " + pattern[0], file=sys.stderr)
-    print("input_line[0:]: " + input_line[0:], file=sys.stderr)
+    print("pattern: " + pattern, file=sys.stderr)
+    print("input_line: " + input_line, file=sys.stderr)
 
     if not pattern:
         return True
