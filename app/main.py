@@ -37,6 +37,7 @@ def matchhere(pattern, input_line):
             return matchhere(pattern[2:], input_line[1:])
         return False
     if pattern == "$" and input_line == "":
+        print(input_line == "")
         return input_line == ""
     if pattern[0] == input_line[0]:
         # print("pattern[1]: " + pattern[1], file=sys.stderr)
