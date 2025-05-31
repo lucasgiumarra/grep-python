@@ -79,4 +79,8 @@ jobs:
          fi
 
          echo "Test passed: correct exit codes received"
- 
+      
+      -name: Run test 9
+      run: |
+        echo -n "caats" | python app/main.py -E "ca+ts"
+    
