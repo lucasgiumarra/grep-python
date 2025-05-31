@@ -39,7 +39,7 @@ def matchhere(pattern, input_line):
     if pattern == "$" and input_line == "":
         print(input_line == "", file=sys.stderr)
         return input_line == ""
-    if len(input_line) > 1 and pattern[0] == input_line[0]:
+    if len(input_line) > 0 and pattern[0] == input_line[0]:
         # print("pattern[1]: " + pattern[1], file=sys.stderr)
         # print("input_line[1:]: " + input_line[1:], file=sys.stderr)
         return matchhere(pattern[1:], input_line[1:])
