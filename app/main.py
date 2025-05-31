@@ -14,6 +14,9 @@ def match(pattern, input_line):
 
 
 def matchhere(pattern, input_line):
+    print("pattern[0]: " + pattern[0], file=sys.stderr)
+    print("input_line[0:]: " + input_line[0:], file=sys.stderr)
+
     if not pattern:
         return True
     if len(pattern) == 1:
@@ -36,8 +39,8 @@ def matchhere(pattern, input_line):
     if pattern == "$" and input_line == "":
         return input_line == ""
     if pattern[0] == input_line[0]:
-        print("pattern[1]: " + pattern[1], file=sys.stderr)
-        print("input_line[1:]: " + input_line[1:], file=sys.stderr)
+        # print("pattern[1]: " + pattern[1], file=sys.stderr)
+        # print("input_line[1:]: " + input_line[1:], file=sys.stderr)
         return matchhere(pattern[1:], input_line[1:])
     return False
 
