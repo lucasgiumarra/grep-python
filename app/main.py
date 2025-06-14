@@ -19,6 +19,8 @@ def matchhere(pattern, input_line):
     if not pattern:
         return True
     if "+" in pattern:
+        if len(input_line) < len(pattern) - 1:
+            return False
         plus_index = pattern.index("+")
         try:
             assert plus_index > 0
