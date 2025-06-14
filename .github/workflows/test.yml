@@ -81,24 +81,24 @@ jobs:
          echo "Test passed: correct exit codes received"
       
       - name: Run test 9
-      run: |
-        set +e  # Allow commands to fail without exiting
-        echo -n "caats" | python app/main.py -E "ca+ts"
-        code1=$?
-        echo -n "ca" | python app/main.py -E "ca+t"
-        code2=$?
-        set -e
-        if [ $code1 -ne 0 ]; then
-         echo "Expected exit code 0 for 'caats', got $code1"
-         exit 1
-        fi
+        run: |
+         set +e  # Allow commands to fail without exiting
+         echo -n "caats" | python app/main.py -E "ca+ts"
+         code1=$?
+         echo -n "ca" | python app/main.py -E "ca+t"
+         code2=$?
+         set -e
+         if [ $code1 -ne 0 ]; then
+          echo "Expected exit code 0 for 'caats', got $code1"
+          exit 1
+         fi
 
-        if [ $code2 -ne 1 ]; then 
-         echo "Expected exit code 1 for 'ca', got $code2"
-         exit 1
-        fi
+         if [ $code2 -ne 1 ]; then 
+          echo "Expected exit code 1 for 'ca', got $code2"
+          exit 1
+         fi
 
-        echo "Test passed: correct exit codes received"
+         echo "Test passed: correct exit codes received"
       
 
 
