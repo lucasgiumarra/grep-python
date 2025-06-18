@@ -100,6 +100,16 @@ jobs:
 
          echo "Test passed: correct exit codes received"
       
+      - name: Run test 10
+        run: |
+         set +e  # Allow commands to fail without exiting
+         echo -n "cat" | python app/main.py -E "ca$t"
+         code1=$?
+         if [ $code1 -ne 0 ]; then 
+          echo "Expected exit code 0 for 'cat', got $code1"
+          exit 1 
+         fi
 
+         echo "Test passed: correct exit codes received"
 
     

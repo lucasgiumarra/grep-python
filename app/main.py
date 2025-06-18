@@ -31,6 +31,30 @@ def matchhere(pattern, input_line):
         if char_pattern in input_line:
             return True
 
+    if "?" in pattern:
+        if len(input_line) == 0:
+            return False
+        question_index = pattern.index("?")
+        try:
+            assert question_index > 0
+        except AssertionError as e:
+            print(f"Need a character preceeding '?': {e}")
+        
+        if question_index != len(pattern) - 1:
+            char_pattern_incl = pattern[:question_index] + pattern[question_index+1:]
+            if question_index > 1:
+                char_pattern_excl = pattern[:question_index - 1] + patten[question_index+1:]
+            else:
+                char_pattern_excl = pattern[question_index+1:]
+        else:
+            char_pattern_incl = pattern[:question_index]
+            char_pattern_excl = pattern[:question_index - 1]
+        print("char_pattern_incl: " + char_pattern_incl, file=sys.stderr)
+        print("char_pattern_excl: " + char_pattern_excl, file=sys.stderr)
+        if input_line in char_pattern_incl or input_line in char_pattern_excl:
+            return True
+        return False
+
     if pattern.startswith("["):
         group, rest, negate_char_group = parse_char_group(pattern)
         if not input_line:
