@@ -103,9 +103,9 @@ jobs:
       - name: Run test 10
         run: |
          set +e  # Allow commands to fail without exiting
-         echo -n "cat" | python app/main.py -E "ca$t"
+         echo -n "cat" | python app/main.py -E "ca?t"
          code1=$?
-         echo -n "act" | python app/main.py -E "ca$t"
+         echo -n "act" | python app/main.py -E "ca?t"
          code2=$?
          echo -n "dog" | python app/main.py -E "ca?t"
          code3=$?
