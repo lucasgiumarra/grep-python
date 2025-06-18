@@ -43,7 +43,7 @@ def matchhere(pattern, input_line):
         if question_index != len(pattern) - 1:
             char_pattern_incl = pattern[:question_index] + pattern[question_index+1:]
             if question_index > 1:
-                char_pattern_excl = pattern[:question_index - 1] + patten[question_index+1:]
+                char_pattern_excl = pattern[:question_index - 1] + pattern[question_index+1:]
             else:
                 char_pattern_excl = pattern[question_index+1:]
         else:
