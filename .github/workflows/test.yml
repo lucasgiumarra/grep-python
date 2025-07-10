@@ -127,4 +127,22 @@ jobs:
 
          echo "Test passed: correct exit codes received"
 
+      - name: Run test 11
+        run: |
+         set +e  # Allow commands to fail without exiting
+         echo -n "dog" | python app/main.py -E "d.g"
+         code1=$?
+         echo -n "dog" | python app/main.py -E "c.g"
+         code2=$?
+         set -e
+
+         if [ $code1 -ne 0 ]; then 
+          echo "Expected exit code 0 for 'dog', got $code1"
+          exit 1
+         fi
+
+         if [ $code2 -ne 1 ]; then 
+          echo "Expected exit code 1 for 'dog', got $code2"
+          exit 1
+         fi
     
