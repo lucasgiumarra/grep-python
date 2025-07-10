@@ -54,6 +54,17 @@ def matchhere(pattern, input_line):
         if input_line in char_pattern_incl or input_line in char_pattern_excl:
             return True
         return False
+    
+    if "." in pattern:
+        if len(input_line) != len(pattern):
+            return False
+        for i in range(len(input_line)):
+            if pattern[i] == ".":
+                continue
+            if input_line[i] != pattern[i]:
+                return False
+        return True
+
 
     if pattern.startswith("["):
         group, rest, negate_char_group = parse_char_group(pattern)
