@@ -18,6 +18,13 @@ def matchhere(pattern, input_line):
 
     if not pattern:
         return True
+    if "|" in pattern:
+        new_pattern = pattern.replace("(", "").replace(")", "").split("|")
+        for p in new_pattern:
+            if matchhere(p, input_line):
+                return True
+        return False
+        
     if "+" in pattern:
         if len(input_line) < len(pattern) - 1:
             return False
@@ -65,7 +72,6 @@ def matchhere(pattern, input_line):
                 return False
         return True
 
-
     if pattern.startswith("["):
         group, rest, negate_char_group = parse_char_group(pattern)
         if not input_line:
@@ -78,7 +84,7 @@ def matchhere(pattern, input_line):
             return matchhere(pattern[2:], input_line[1:])
         return False
     if pattern.startswith("\\w"):
-        if input_line and input_line[0].isalpha():
+        if input_line and (input_line[0].isalnum() or input_line[0] == "_"):
             return matchhere(pattern[2:], input_line[1:])
         return False
     if pattern == "$" and input_line == "":
