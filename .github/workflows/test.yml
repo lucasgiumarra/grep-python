@@ -20,7 +20,9 @@ jobs:
           python-version: "3.11"
 
       - name: Run test 1 
-        run: echo -n "apple" | python app/main.py -E "a"
+        run: | 
+          echo -n "apple" | python app/main.py -E "a"
+          echo -n "apple" | python app/ast.py -E "a"
 
       - name: Run test 2 
         run: echo -n "apple123" | python app/main.py -E "\d"
