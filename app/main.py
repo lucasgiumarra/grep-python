@@ -1,6 +1,5 @@
 import sys
 
-
 def match(pattern, input_line):
     for i in range(len(input_line) + 1):
         if pattern[0] == "^":
@@ -18,60 +17,65 @@ def matchhere(pattern, input_line):
 
     if not pattern:
         return True
-    if "|" in pattern:
-        new_pattern = pattern.replace("(", "").replace(")", "").split("|")
-        for p in new_pattern:
-            if matchhere(p, input_line):
+    alternatives = split_alternatives(pattern)
+    if len(alternatives) > 1: # Only proceed if there's actually an "|" at the top level
+        print(f"Alteration detected: Alternatiives: {str(alternatives)}", file=sys.stderr)
+        for sub_pattern in alternatives:
+            if matchhere(sub_pattern, input_line):
                 return True
         return False
+    if len(pattern) >= 2 and pattern[1] == "+":
+        # We found a pattern segment like "X+" where X is pattern[0]
+        char_to_match = pattern[0]
+        rest_of_pattern = pattern[2:]
         
-    if "+" in pattern:
-        if len(input_line) < len(pattern) - 1:
+        # Try to match the character 'X' at least once
+        if not input_line or not matchchar(char_to_match, input_line[0]):
             return False
-        plus_index = pattern.index("+")
-        try:
-            assert plus_index > 0
-        except AssertionError as e:
-            print(f"Need a character preceeding '+': {e}")
 
-        char_pattern = pattern[:plus_index]
-        if char_pattern in input_line:
-            return True
-
-    if "?" in pattern:
-        if len(input_line) == 0:
-            return False
-        question_index = pattern.index("?")
-        try:
-            assert question_index > 0
-        except AssertionError as e:
-            print(f"Need a character preceeding '?': {e}")
+        # If it matches at least once, then try to match it one or more times
+        # (greedy approach with backtracking)
         
-        if question_index != len(pattern) - 1:
-            char_pattern_incl = pattern[:question_index] + pattern[question_index+1:]
-            if question_index > 1:
-                char_pattern_excl = pattern[:question_index - 1] + pattern[question_index+1:]
-            else:
-                char_pattern_excl = pattern[question_index+1:]
-        else:
-            char_pattern_incl = pattern[:question_index]
-            char_pattern_excl = pattern[:question_index - 1]
-        print("char_pattern_incl: " + char_pattern_incl, file=sys.stderr)
-        print("char_pattern_excl: " + char_pattern_excl, file=sys.stderr)
-        if input_line in char_pattern_incl or input_line in char_pattern_excl:
+        # Option 1: Match more 'X's (recursive call for X+)
+        if matchhere(pattern, input_line[1:]):
             return True
-        return False
+        
+        # Option 2: Stop matching 'X's and try to match the rest of the pattern
+        if matchhere(rest_of_pattern, input_line[1:]):
+            return True
+        
+        # if neither option works
+        return False 
+        
     
-    if "." in pattern:
-        if len(input_line) != len(pattern):
-            return False
-        for i in range(len(input_line)):
-            if pattern[i] == ".":
-                continue
-            if input_line[i] != pattern[i]:
-                return False
-        return True
+    if len(pattern) >= 2 and pattern[1] == "?":
+        if len(pattern) == 2:
+            included_char = pattern[0]
+            excluded_char = "" 
+        else:
+            # We know from the first check that len(pattern) is at least two
+            # so this else handles when len(pattern) > 2
+            included_char = pattern[0] + pattern[2:]
+            excluded_char = pattern[2:]
+        print(f"included_char: {included_char}", file=sys.stderr)
+        print(f"excluded_char: {excluded_char}", file=sys.stderr)
+        if matchchar(included_char, input_line) or matchchar(excluded_char, input_line):
+            return True 
 
+        return False 
+
+    if pattern.startswith("."):
+        if not input_line:
+            return False
+        return matchhere(pattern[1:], input_line[1:])
+    if pattern.startswith("("):
+        try: 
+            closing_paren_index = find_matching_paraenthesis(pattern, 0)
+        except ValueError as e:
+            raise e #Re-raise if malformed
+        
+        inner_pattern = pattern[1:closing_paren_index]
+        remaining_pattern = pattern[closing_paren_index + 1]
     if pattern.startswith("["):
         group, rest, negate_char_group = parse_char_group(pattern)
         if not input_line:
@@ -110,6 +114,52 @@ def parse_char_group(pattern):
     rest = pattern[i+1:]
     return chars, rest, negate
 
+def split_alternatives(pattern):
+    parts = []
+    current_part = [] 
+    depth = 0 
+    for char in pattern:
+        if char == '(' and depth == 0: # Start of a top-level group
+            current_part.append(char)
+            depth += 1
+        elif char == ')' and depth > 0: # End of a top-level group
+            current_part.append(char)
+            depth -= 1
+        elif char == '|' and depth == 0: # Top-level alternative
+            parts.append("".join(current_part))
+            current_part = []
+        else: # Any other character or character within a group
+            current_part.append(char)
+    if current_part: # Add the last part
+        parts.append("".join(current_part))
+    return parts
+
+def matchchar(pattern_char, input_char):
+    """
+    Checks if a single character pattern matches a single input character. 
+    Handles '.', '\\d', '\\w', and literal characters.
+    """
+    if not input_char:
+        return False
+    if pattern_char == '.':
+        return True
+    if pattern_char == '\\d':
+        return input_char.isdigit()
+    if pattern_char == '\\w':
+        return input_char.isalnum() or input_char == '_'
+    return pattern_char == input_char
+
+
+def find_matching_paraenthesis(pattern, start_index):
+    depth = 0
+    for i in range(start_index, len(pattern)):
+        if pattern[i] == '(':
+            depth += 1
+        elif pattern[i] == ')':
+            depth -= 1
+            if depth == 0:
+                return i
+    raise ValueError("Unmatched opening paraenthesis")
 
 def main():
     pattern = sys.argv[2]
