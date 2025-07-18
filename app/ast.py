@@ -13,6 +13,10 @@ class CharClassNode(Node): # For /d, /w, etc.
     def __init__(self, type):
         self.type = type # 'digit', 'word', etc.
 
+class ConcatenationNode(Node):
+    def __init__(self, children):
+        self.children = children # List of Nodes
+
 class AnchorNode(Node):
     def __init__(self, type):
         self.type = type # 'start', 'end'
@@ -35,26 +39,36 @@ class RegexParser:
 
     def _parse_alternation(self):
         # A | B | C
-        left_node = self._parse_alternation
+        left_node = self._parse_concatenation()
         if self._peek() == '|':
             self._consume('|')
             right_node = self._parse_alternation()
             return AlternationNode([left_node, right_node])
         return left_node
     
-    # def _parse_concatenation(self):
-    #     # A B C (implicit)
-    #     nodes = []
-    #     while self.pos < len(self.pattern) and self._peek() not in '|':
-    #         atom = self._parse_atom()
-    #         if atom:
-    #             nodes.append(atom)
-    #         else: # E.g., an empty group () might return None, need to handle
-    #             break
-    #     if not nodes: return None # Handle empty terms
-    #     if len(nodes) == 1: return nodes[0]
-    #     return ConcatenationNode(nodes)
- 
+    def _parse_concatenation(self):
+        # A B C (implicit)
+        nodes = []
+        nodes = []
+        while True: # Changed loop condition
+            current_char = self._peek()
+            if current_char is None or current_char in '|)': # Explicitly check for None or '|' or ')'
+                break
+            
+            atom = self._parse_atom() # _parse_atom will handle consuming the char
+            if atom:
+                nodes.append(atom)
+            else:
+                # This might happen if _parse_atom consumes a char but returns None (e.g., empty group () is not handled here)
+                # Or if it fails to parse a valid atom, we should stop
+                break 
+        
+        if not nodes: 
+            return None # Handle cases where no valid concatenation atoms were found
+        if len(nodes) == 1: 
+            return nodes[0]
+        return ConcatenationNode(nodes)
+
     def _parse_atom(self):
         # Literal, ., [], (), \d, \w, followed by optional quantifier
         char = self._peek()
