@@ -49,7 +49,6 @@ class RegexParser:
     def _parse_concatenation(self):
         # A B C (implicit)
         nodes = []
-        nodes = []
         while True: # Changed loop condition
             current_char = self._peek()
             if current_char is None or current_char in '|)': # Explicitly check for None or '|' or ')'
@@ -176,6 +175,7 @@ def main():
         parser = RegexParser(pattern_str)
         ast = parser.parse()
         print("AST built successfully!", file=sys.stderr)
+        print(f"ast: {ast}", file=sys.stderr)
         # You might want to print the AST for debugging here
 
         # Phase 2: Match the AST against the input line
