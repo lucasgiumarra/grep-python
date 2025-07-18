@@ -25,22 +25,31 @@ jobs:
           echo -n "apple" | python app/ast.py -E "a"
 
       - name: Run test 2 
-        run: echo -n "apple123" | python app/main.py -E "\d"
+        run: |
+          echo -n "apple123" | python app/main.py -E "\d"
+          echo -n "apple123" | python app/ast.py -E "\d"
 
       - name: Run test 3 
-        run: echo -n "alpha-num3ric" | python app/main.py -E "\w"
+        run: |
+          echo -n "alpha-num3ric" | python app/main.py -E "\w"
+          echo -n "alpha-num3ric" | python app/ast.py -E "\w"
 
       - name: Run test 4 
-        run: echo -n "apple" | python app/main.py -E "[abc]"
+        run: |
+          echo -n "apple" | python app/main.py -E "[abc]"
+          echo -n "apple" | python app/ast.py -E "[abc]"
 
       - name: Run test 5 
         run: |
          echo -n "apple" | python app/main.py -E "[^abc]"
          echo -n "apple" | python app/main.py -E "[^bcd]"
+         echo -n "apple" | python app/ast.py -E "[^abc]"
+         echo -n "apple" | python app/ast.py -E "[^bcd]"
 
       - name: Run test 6 
         run: |
          echo -n "1 apple" | python app/main.py -E "\d apple"
+         echo -n "1 apple" | python app/ast.py -E "\d apple"
  
       - name: Run test 7 
         run: |
@@ -89,6 +98,10 @@ jobs:
          code1=$?
          echo -n "ca" | python app/main.py -E "ca+t"
          code2=$?
+         echo -n "ca" | python app/ast.py -E "ca+t"
+         code3=$?
+         echo -n "caats" | python app/ast.py -E "ca+ts"
+         code4=$?
          set -e
          if [ $code1 -ne 0 ]; then
           echo "Expected exit code 0 for 'caats', got $code1"
@@ -97,6 +110,16 @@ jobs:
 
          if [ $code2 -ne 1 ]; then 
           echo "Expected exit code 1 for 'ca', got $code2"
+          exit 1
+         fi
+
+         if [ $code3 -ne 1 ]; then 
+          echo "Expected exit code 1 for 'ca', got $code3"
+          exit 1
+         fi
+
+         if [ $code4 -ne 0 ]; then
+          echo "Expected exit code 0 for 'caats', got $code4"
           exit 1
          fi
 
@@ -111,6 +134,12 @@ jobs:
          code2=$?
          echo -n "dog" | python app/main.py -E "ca?t"
          code3=$?
+         echo -n "cat" | python app/ast.py -E "ca?t"
+         code4=$?
+         echo -n "act" | python app/ast.py -E "ca?t"
+         code5=$?
+         echo -n "dog" | python app/ast.py -E "ca?t"
+         code6=$?
          set -e
          if [ $code1 -ne 0 ]; then 
           echo "Expected exit code 0 for 'cat', got $code1"
@@ -127,6 +156,21 @@ jobs:
           exit 1
          fi
 
+         if [ $code4 -ne 0 ]; then 
+          echo "Expected exit code 0 for 'cat', got $code4"
+          exit 1 
+         fi
+
+         if [ $code5 -ne 0 ]; then 
+          echo "Expected exit code 0 for 'act', got $code5"
+          exit 1
+         fi
+
+         if [ $code6 -ne 1 ]; then 
+          echo "Expected exit code 1 for 'dog', got $code6"
+          exit 1
+         fi
+
          echo "Test passed: correct exit codes received"
 
       - name: Run test 11
@@ -136,6 +180,10 @@ jobs:
          code1=$?
          echo -n "dog" | python app/main.py -E "c.g"
          code2=$?
+         echo -n "dog" | python app/ast.py -E "d.g"
+         code3=$?
+         echo -n "dog" | python app/ast.py -E "c.g"
+         code4=$?
          set -e
 
          if [ $code1 -ne 0 ]; then 
@@ -148,6 +196,16 @@ jobs:
           exit 1
          fi
 
+         if [ $code3 -ne 0 ]; then 
+          echo "Expected exit code 0 for 'dog', got $code3"
+          exit 1
+         fi
+
+         if [ $code4 -ne 1 ]; then 
+          echo "Expected exit code 1 for 'dog', got $code4"
+          exit 1
+         fi
+
       - name: Run test 12
         run: |
          set +e  # Allow commands to fail without exiting
@@ -155,6 +213,10 @@ jobs:
          code1=$?
          echo -n "dog" | python app/main.py -E "(cat|dog)"
          code2=$?
+         echo -n "cat" | python app/ast.py -E "(cat|dog)"
+         code3=$?
+         echo -n "dog" | python app/ast.py -E "(cat|dog)"
+         code4=$?
          set -e
          if [ $code1 -ne 0 ]; then 
           echo "Expected exit code 0 for 'cat', got $code1"
@@ -165,4 +227,13 @@ jobs:
           echo "Expected exit code 0 for 'dog', got $code2"
           exit 1
          fi
-    
+
+         if [ $code3 -ne 0 ]; then 
+          echo "Expected exit code 0 for 'cat', got $code3"
+          exit 1
+         fi
+
+         if [ $code4 -ne 0 ]; then 
+          echo "Expected exit code 0 for 'dog', got $code4"
+          exit 1
+         fi       

@@ -25,6 +25,13 @@ class AlternationNode(Node):
     def __init__(self, branches):
         self.branches = branches # List of Nodes (each a branch)
 
+class QuantifierNode(Node):
+    def __init__(self, child, type, greedy=True):
+        self.child = child
+        self.type = type # e.g., 'ONE_OR_MORE', 'ZERO_OR_MORE', 'ZERO_OR_ONE'
+        self.greedy = greedy # For future non-greedy support
+
+
 class RegexParser: 
     def __init__(self, pattern):
         self.pattern = pattern
@@ -121,39 +128,39 @@ def match_ast(ast_node, input_line):
             return False, None
         return True, input_line[1:]
 
-    # Example for ConcatenationNode:
-    # if isinstance(ast_node, ConcatenationNode):
-    #     current_input = input_line
-    #     for child_node in ast_node.children:
-    #         matched, current_input = match_ast(child_node, current_input)
-    #         if not matched:
-    #             return False, None
-    #     return True, current_input
+    #Example for ConcatenationNode:
+    if isinstance(ast_node, ConcatenationNode):
+        current_input = input_line
+        for child_node in ast_node.children:
+            matched, current_input = match_ast(child_node, current_input)
+            if not matched:
+                return False, None
+        return True, current_input
 
-    # # Example for AlternationNode:
-    # if isinstance(ast_node, AlternationNode):
-    #     for branch_node in ast_node.branches:
-    #         matched, remaining = match_ast(branch_node, input_line)
-    #         if matched:
-    #             return True, remaining
-    #     return False, None
+    # Example for AlternationNode:
+    if isinstance(ast_node, AlternationNode):
+        for branch_node in ast_node.branches:
+            matched, remaining = match_ast(branch_node, input_line)
+            if matched:
+                return True, remaining
+        return False, None
 
-    # # Example for QuantifierNode (ONE_OR_MORE):
-    # if isinstance(ast_node, QuantifierNode) and ast_node.type == 'ONE_OR_MORE':
-    #     # Must match at least once
-    #     first_match, current_input = match_ast(ast_node.child, input_line)
-    #     if not first_match:
-    #         return False, None
+    # Example for QuantifierNode (ONE_OR_MORE):
+    if isinstance(ast_node, QuantifierNode) and ast_node.type == 'ONE_OR_MORE':
+        # Must match at least once
+        first_match, current_input = match_ast(ast_node.child, input_line)
+        if not first_match:
+            return False, None
         
-    #     # Then, recursively try to match the child zero or more times (greedy)
-    #     temp_input = current_input
-    #     while True:
-    #         m, next_input = match_ast(ast_node.child, temp_input)
-    #         if m:
-    #             temp_input = next_input
-    #         else:
-    #             break
-    #     return True, temp_input
+        # Then, recursively try to match the child zero or more times (greedy)
+        temp_input = current_input
+        while True:
+            m, next_input = match_ast(ast_node.child, temp_input)
+            if m:
+                temp_input = next_input
+            else:
+                break
+        return True, temp_input
 
     # ... and so on for all other node types ...
 
@@ -178,7 +185,7 @@ def main():
         parser = RegexParser(pattern_str)
         ast = parser.parse()
         print("AST built successfully!", file=sys.stderr)
-        print(f"ast: {ast}", file=sys.stderr)
+        # print(f"ast: {ast}", file=sys.stderr)
         # You might want to print the AST for debugging here
 
         # Phase 2: Match the AST against the input line
