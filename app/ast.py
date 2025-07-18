@@ -88,6 +88,7 @@ class RegexParser:
         else: # Literal character
             node = LiteralNode(char)
             self._consume(char)
+        return node
 
     def _peek(self):
         if self.pos < len(self.pattern):
