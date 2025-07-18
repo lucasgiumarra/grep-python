@@ -71,6 +71,7 @@ class RegexParser:
     def _parse_atom(self):
         # Literal, ., [], (), \d, \w, followed by optional quantifier
         char = self._peek()
+        print(f"char in _parse_atom: {char}", file=sys.stderr)
         if char is None: return None
         
         node = Node
@@ -162,7 +163,8 @@ def match_ast(ast_node, input_line):
 
 def main():
     pattern_str = sys.argv[2]
-    input_line = sys.stdin.read().strip() # Use strip() to remove trailing newline
+    input_line = sys.stdin.read()
+    #.strip() # Use strip() to remove trailing newline
 
     if sys.argv[1] != "-E":
         print("Expected first argument to be '-E'", file=sys.stderr)
