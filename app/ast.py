@@ -167,6 +167,7 @@ class RegexParser:
     def _parse_escape_sequence(self):
         self._consume('\\')
         escaped_char = self._peek()
+        print(f"escaped_char: {escaped_char}", file=sys.stderr)
         if escaped_char is None:
             raise ValueError("Incomplete escape sequence")
         self._consume(escaped_char)
