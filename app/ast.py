@@ -121,6 +121,7 @@ class RegexParser:
         elif char == '[':
             node = self._parse_char_set()
         elif char == '\\':
+            print("parse_escape_sequence", file=sys.stderr)
             node = self._parse_escape_sequence()
         elif char == '.':
             node = DotNode()
