@@ -13,6 +13,11 @@ class CharClassNode(Node): # For /d, /w, etc.
     def __init__(self, type):
         self.type = type # 'digit', 'word', etc.
 
+class CharSetNode(Node): # For [...]
+    def __init__(self, chars, negated):
+        self.chars = chars
+        self.negated = negated
+
 class ConcatenationNode(Node):
     def __init__(self, children):
         self.children = children # List of Nodes
@@ -97,6 +102,33 @@ class RegexParser:
             self._consume(char)
         return node
 
+    def _parse_char_set(self):
+        self._consume('[')
+        negated = False
+        if self._peek() == '^':
+            self._consume('^')
+            negated = True 
+        chars = set()
+        while self.pos < len(self.pattern) and self._peek() != ']':
+            # Add range support here: e.g., [a-z] 
+            chars.add(self._peek())
+            self._consume(self._peek())
+        self._expect(']')
+        return CharSetNode(chars, negated)
+
+    def _parse_escape_sequence(self):
+        self._consume('\\')
+        escaped_char = self._peek()
+        if escaped_char is None:
+            raise ValueError("Incomplete escape sequence")
+        self._consume(escaped_char)
+        if escaped_char == 'd':
+            return CharClassNode('digit')
+        elif escaped_char == 'w':
+            return CharClassNode('word')
+        # Add more escape sequences as needed: \s, \S, \D, \W, \. etc.
+        return LiteralNode(escaped_char) # For escaped literal chars like '\+'
+
     def _peek(self):
         if self.pos < len(self.pattern):
             return self.pattern[self.pos]
@@ -138,7 +170,7 @@ def match_ast(ast_node, input_line):
         return True, current_input
 
     # Example for AlternationNode:
-    if isinstance(ast_node, AlternationNode):
+    if isinstance(ast_node, AlternationNode) and ast_node == 'ONE_OR_MORE':
         for branch_node in ast_node.branches:
             matched, remaining = match_ast(branch_node, input_line)
             if matched:
