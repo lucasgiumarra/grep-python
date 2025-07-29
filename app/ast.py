@@ -109,6 +109,7 @@ class RegexParser:
     def _parse_atom(self):
         # Literal, ., [], (), \d, \w, followed by optional quantifier
         char = self._peek()
+        print(f"char in _parse_atom: {char}", file=sys.stderr)
         if char is None:
             return None # Reached end of pattern, no atom found
 
@@ -146,6 +147,7 @@ class RegexParser:
                     return QuantifierNode(node, 'ZERO_OR_ONE')
         
         return node # Return the atom node (possibly quantified)
+
 
     def _parse_char_set(self):
         self._consume('[')
