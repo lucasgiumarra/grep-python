@@ -8,6 +8,10 @@ class DotNode(Node):
 class LiteralNode(Node):
     def __init__(self, char):
         self.char = char
+
+class GroupNode(Node):
+    def __init__(self, child):
+        self.child = child # A single Node representing the group's content
        
 class CharClassNode(Node): # For /d, /w, etc.
     def __init__(self, type):
@@ -80,18 +84,44 @@ class RegexParser:
             return nodes[0]
         return ConcatenationNode(nodes)
 
+    # def _parse_atom(self):
+    #     # Literal, ., [], (), \d, \w, followed by optional quantifier
+    #     char = self._peek()
+    #     print(f"char in _parse_atom: {char}", file=sys.stderr)
+    #     if char is None: return None
+        
+    #     node = Node
+    #     # if char == '(':
+    #     #     self._consume('(')
+    #     #     node = GroupNode(self._parse_alternation()) # Group can contain an alternation
+    #     #     self._expect(')')
+    #     if char == ".":
+    #         node = DotNode()
+    #         self._consume('.')
+    #     elif char in '^$': # Anchors are atoms
+    #         node = AnchorNode('start' if char == '^' else 'end')
+    #         self._consume(char)
+    #     else: # Literal character
+    #         node = LiteralNode(char)
+    #         self._consume(char)
+    #     return node
+
     def _parse_atom(self):
         # Literal, ., [], (), \d, \w, followed by optional quantifier
         char = self._peek()
-        print(f"char in _parse_atom: {char}", file=sys.stderr)
-        if char is None: return None
-        
-        node = Node
-        # if char == '(':
-        #     self._consume('(')
-        #     node = GroupNode(self._parse_alternation()) # Group can contain an alternation
-        #     self._expect(')')
-        if char == ".":
+        if char is None:
+            return None # Reached end of pattern, no atom found
+
+        node = None
+        if char == '(':
+            self._consume('(')
+            node = GroupNode(self._parse_alternation()) # Group can contain an alternation
+            self._expect(')')
+        elif char == '[':
+            node = self._parse_char_set()
+        elif char == '\\':
+            node = self._parse_escape_sequence()
+        elif char == '.':
             node = DotNode()
             self._consume('.')
         elif char in '^$': # Anchors are atoms
@@ -100,7 +130,22 @@ class RegexParser:
         else: # Literal character
             node = LiteralNode(char)
             self._consume(char)
-        return node
+
+        # Check for quantifiers only if a node was successfully parsed AND
+        # if there's a next character to peek at which is a quantifier.
+        if node: # Ensure 'node' was successfully created
+            next_char = self._peek() # Get the next character after the atom
+            if next_char is not None and next_char in '+*?': # Safely check if it's a quantifier
+                quantifier_type = next_char
+                self._consume(quantifier_type)
+                if quantifier_type == '+':
+                    return QuantifierNode(node, 'ONE_OR_MORE')
+                elif quantifier_type == '*':
+                    return QuantifierNode(node, 'ZERO_OR_MORE')
+                elif quantifier_type == '?':
+                    return QuantifierNode(node, 'ZERO_OR_ONE')
+        
+        return node # Return the atom node (possibly quantified)
 
     def _parse_char_set(self):
         self._consume('[')
@@ -170,7 +215,7 @@ def match_ast(ast_node, input_line):
         return True, current_input
 
     # Example for AlternationNode:
-    if isinstance(ast_node, AlternationNode) and ast_node == 'ONE_OR_MORE':
+    if isinstance(ast_node, AlternationNode):
         for branch_node in ast_node.branches:
             matched, remaining = match_ast(branch_node, input_line)
             if matched:
