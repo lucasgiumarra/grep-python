@@ -84,28 +84,6 @@ class RegexParser:
             return nodes[0]
         return ConcatenationNode(nodes)
 
-    # def _parse_atom(self):
-    #     # Literal, ., [], (), \d, \w, followed by optional quantifier
-    #     char = self._peek()
-    #     print(f"char in _parse_atom: {char}", file=sys.stderr)
-    #     if char is None: return None
-        
-    #     node = Node
-    #     # if char == '(':
-    #     #     self._consume('(')
-    #     #     node = GroupNode(self._parse_alternation()) # Group can contain an alternation
-    #     #     self._expect(')')
-    #     if char == ".":
-    #         node = DotNode()
-    #         self._consume('.')
-    #     elif char in '^$': # Anchors are atoms
-    #         node = AnchorNode('start' if char == '^' else 'end')
-    #         self._consume(char)
-    #     else: # Literal character
-    #         node = LiteralNode(char)
-    #         self._consume(char)
-    #     return node
-
     def _parse_atom(self):
         # Literal, ., [], (), \d, \w, followed by optional quantifier
         char = self._peek()
@@ -121,8 +99,8 @@ class RegexParser:
         elif char == '[':
             node = self._parse_char_set()
         elif char == '\\':
-            print("parse_escape_sequence", file=sys.stderr)
             node = self._parse_escape_sequence()
+            print(f"parse_escape_sequence: {node}", file=sys.stderr)
         elif char == '.':
             node = DotNode()
             self._consume('.')
