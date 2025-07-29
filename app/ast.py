@@ -150,6 +150,7 @@ class RegexParser:
             raise ValueError("Incomplete escape sequence")
         self._consume(escaped_char)
         if escaped_char == 'd':
+            print("digit", file=sys.stderr)
             return CharClassNode('digit')
         elif escaped_char == 'w':
             return CharClassNode('word')
