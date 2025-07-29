@@ -100,7 +100,7 @@ class RegexParser:
             node = self._parse_char_set()
         elif char == '\\':
             node = self._parse_escape_sequence()
-            print(f"parse_escape_sequence: {node}", file=sys.stderr)
+            print(f"parse_escape_sequence: {node.char}", file=sys.stderr)
         elif char == '.':
             node = DotNode()
             self._consume('.')
