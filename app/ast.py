@@ -327,6 +327,7 @@ def main():
         exit(1)
 
     print("Logs from your program will appear here!", file=sys.stderr)
+    print(f"\npattern string: {pattern_str}\n", file=sys.stderr)
 
     try:
         # Phase 1: Parse the regex string into an AST
