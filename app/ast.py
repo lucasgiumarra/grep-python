@@ -1,44 +1,64 @@
 import sys
 
 class Node:
-    pass
+    def __repr__(self):
+        # A generic representation, can be overwritten by subclasses
+        return self.__class__.__name__
+
 class DotNode(Node):
-    pass
+    def __repr__(self):
+        return "DotNode()"
 
 class LiteralNode(Node):
     def __init__(self, char):
         self.char = char
+    def __repr__(self):
+        return f"LiteralNode('{self.char}')"
 
 class GroupNode(Node):
     def __init__(self, child):
         self.child = child # A single Node representing the group's content
+    def __repr__(self):
+        return f"GroupNode('{self.child!r}')"
        
 class CharClassNode(Node): # For /d, /w, etc.
     def __init__(self, type):
         self.type = type # 'digit', 'word', etc.
+    def __repr__(self):
+        return f"CharClassNode(type='{self.type}')"
 
 class CharSetNode(Node): # For [...]
     def __init__(self, chars, negated):
         self.chars = chars
         self.negated = negated
+    def __repr__(self):
+        return f"CharSetNode(chars={self.chars}, negated={self.negated})"
 
 class ConcatenationNode(Node):
     def __init__(self, children):
         self.children = children # List of Nodes
+    def __repr__(self):
+        return f"ConcatenationNode('{self.children!r}')"
 
 class AnchorNode(Node):
     def __init__(self, type):
         self.type = type # 'start', 'end'
+    def __repr__(self):
+        return f"AnchorNode(type='{self.type}')"
 
 class AlternationNode(Node):
     def __init__(self, branches):
         self.branches = branches # List of Nodes (each a branch)
+    def __repr__(self):
+        return f"AlternationNode(branches='{self.branches}')"
 
 class QuantifierNode(Node):
     def __init__(self, child, type, greedy=True):
         self.child = child
         self.type = type # e.g., 'ONE_OR_MORE', 'ZERO_OR_MORE', 'ZERO_OR_ONE'
         self.greedy = greedy # For future non-greedy support
+    def __repr__(self):
+        return f"QuantifierNode(child={self.child!r}, type='{self.type}', greedy={self.greedy})"
 
 
 class RegexParser: 
@@ -126,7 +146,6 @@ class RegexParser:
         
         return node # Return the atom node (possibly quantified)
 
-
     def _parse_char_set(self):
         self._consume('[')
         negated = False
@@ -171,6 +190,28 @@ class RegexParser:
             raise ValueError(f"Expected '{char}' but found '{self._peek()}' at pos {self.pos}")
         self.pos += 1
 
+def print_ast(node, level=0, prefix=""):
+        """
+        Recursively prints the AST in a human-readable, indented format.
+        """
+        indent = "  " * level
+        if prefix:
+            print(f"{indent}{prefix}{node!r}")
+        else:
+            print(f"{indent}{node!r}")
+
+        # Define how to access children for different node types
+        children_to_print = []
+        if isinstance(node, (ConcatenationNode, AlternationNode)):
+            children_to_print.extend(node.children if hasattr(node, 'children') else node.branches)
+        elif isinstance(node, (GroupNode, QuantifierNode)):
+            if hasattr(node, 'child') and node.child is not None:
+                children_to_print.append(node.child)
+
+        for i, child in enumerate(children_to_print):
+            # Determine appropriate prefix for child nodes
+            child_prefix = f"├── " if i < len(children_to_print) - 1 else "└── "
+            print_ast(child, level + 1, prefix=child_prefix)
 
 def match_ast(ast_node, input_line):
     """
@@ -186,6 +227,8 @@ def match_ast(ast_node, input_line):
         if not input_line or input_line[0] != ast_node.char:
             return False, None
         return True, input_line[1:]
+    
+    # if isinstance(ast_node, CharClassNode):
 
     #Example for ConcatenationNode:
     if isinstance(ast_node, ConcatenationNode):
@@ -227,7 +270,6 @@ def match_ast(ast_node, input_line):
     return False, None # Fallback if node type not handled
 
 
-
 def main():
     pattern_str = sys.argv[2]
     input_line = sys.stdin.read()
@@ -244,8 +286,11 @@ def main():
         parser = RegexParser(pattern_str)
         ast = parser.parse()
         print("AST built successfully!", file=sys.stderr)
-        # print(f"ast: {ast}", file=sys.stderr)
-        # You might want to print the AST for debugging here
+
+        print("\n--- AST Representation ---", file=sys.stderr)
+        print_ast(ast, prefix="")
+        print("--------------------------\n", file=sys.stderr)
+        # **************************************
 
         # Phase 2: Match the AST against the input line
         if pattern_str.startswith("^"):
