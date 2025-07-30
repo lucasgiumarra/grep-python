@@ -257,7 +257,7 @@ def match_ast(ast_node, input_line):
             return False, None
 
     if isinstance(ast_node, CharSetNode):
-        group, rest, negate_char_group = ast_node.char, ast_node.rest, ast_node.negated
+        # group, rest, negate_char_group = ast_node.char, ast_node.rest, ast_node.negated
         if not input_line:
             return False, None
         
@@ -267,6 +267,11 @@ def match_ast(ast_node, input_line):
         #    If `negated` is False, the character SHOULD be in the set.
         is_in_set = char_to_check in ast_node.chars
 
+        # The condition (is_in_set != ast_node.negated) correctly combines these:
+        # If negated is False (meaning we want chars IN the set):
+        #   (is_in_set != False) -> is_in_set -> True if char is in set
+        # If negated is True (meaning we want chars NOT IN the set):
+        #   (is_in_set != True) -> not is_in_set -> True if char is NOT in set
         if is_in_set != ast_node.negated:
             return True, input_line[1:]
         else:
