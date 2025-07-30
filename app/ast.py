@@ -213,6 +213,14 @@ def print_ast(node, level=0, prefix=""):
             child_prefix = f"├── " if i < len(children_to_print) - 1 else "└── "
             print_ast(child, level + 1, prefix=child_prefix)
 
+# Helper to check single char match (from previous turns, can be reused/adapted)
+def _is_digit(char):
+    return char.isdigit()
+
+def _is_word_char(char):
+    return char.isalnum() or char == '_'
+
+
 def match_ast(ast_node, input_line):
     """
     Attempts to match the AST node against the input_line.
@@ -228,7 +236,23 @@ def match_ast(ast_node, input_line):
             return False, None
         return True, input_line[1:]
     
-    # if isinstance(ast_node, CharClassNode):
+    if isinstance(ast_node, CharClassNode):
+        if not input_line:
+            return False, None
+        
+        char = input_line[0]
+        matched = False
+
+        if ast_node.type == 'digit':
+            matched = _is_digit(char)
+        elif ast_node.type == 'word':
+            matched = _is_word_char(char)
+        
+        if matched: 
+            return True, input_line[1:] # Consume the character and continue
+        else: 
+            return False, None
+
 
     #Example for ConcatenationNode:
     if isinstance(ast_node, ConcatenationNode):
