@@ -28,7 +28,7 @@ class CharClassNode(Node): # For /d, /w, etc.
         return f"CharClassNode(type='{self.type}')"
 
 class CharSetNode(Node): # For [...]
-    def __init__(self, chars, negated, rest):
+    def __init__(self, chars, negated):
         self.chars = chars
         self.negated = negated
         # self.rest = rest
