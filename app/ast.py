@@ -28,11 +28,13 @@ class CharClassNode(Node): # For /d, /w, etc.
         return f"CharClassNode(type='{self.type}')"
 
 class CharSetNode(Node): # For [...]
-    def __init__(self, chars, negated):
+    def __init__(self, chars, negated, rest):
         self.chars = chars
         self.negated = negated
+        # self.rest = rest
     def __repr__(self):
         return f"CharSetNode(chars={self.chars}, negated={self.negated})"
+        # return f"CharSetNode(chars={self.chars}, negated={self.negated}, rest={self.rest})"
 
 class ConcatenationNode(Node):
     def __init__(self, children):
@@ -158,6 +160,7 @@ class RegexParser:
             chars.add(self._peek())
             self._consume(self._peek())
         self._expect(']')
+        # rest = self[i+1:]
         return CharSetNode(chars, negated)
 
     def _parse_escape_sequence(self):
@@ -253,6 +256,21 @@ def match_ast(ast_node, input_line):
         else: 
             return False, None
 
+    if isinstance(ast_node, CharSetNode):
+        group, rest, negate_char_group = ast_node.char, ast_node.rest, ast_node.negated
+        if not input_line:
+            return False, None
+        
+        char_to_check = input_line[0]
+        # 2. Determine if the character matches the set based on `negated` flag
+        #    If `negated` is True, the character should NOT be in the set.
+        #    If `negated` is False, the character SHOULD be in the set.
+        is_in_set = char_to_check in ast_node.chars
+
+        if is_in_set != ast_node.negated:
+            return True, input_line[1:]
+        else:
+            return False, None
 
     #Example for ConcatenationNode:
     if isinstance(ast_node, ConcatenationNode):
