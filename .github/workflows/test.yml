@@ -21,26 +21,31 @@ jobs:
 
       - name: Run test 1 
         run: | 
+          echo "Match literal character"
           echo -n "apple" | python app/main.py -E "a"
           echo -n "apple" | python app/ast.py -E "a"
 
       - name: Run test 2 
         run: |
+          echo "Match digits"
           echo -n "apple123" | python app/main.py -E "\d"
           echo -n "apple123" | python app/ast.py -E "\d"
 
       - name: Run test 3 
         run: |
+          echo "Match alphanumeric characters"
           echo -n "alpha-num3ric" | python app/main.py -E "\w"
           echo -n "alpha-num3ric" | python app/ast.py -E "\w"
 
       - name: Run test 4 
         run: |
+          echo "Positive character groups"
           echo -n "apple" | python app/main.py -E "[abc]"
           echo -n "apple" | python app/ast.py -E "[abc]"
 
       - name: Run test 5 
         run: |
+         echo "Negative character groups"
          echo -n "apple" | python app/main.py -E "[^abc]"
          echo -n "apple" | python app/main.py -E "[^bcd]"
          echo -n "apple" | python app/ast.py -E "[^abc]"
@@ -48,11 +53,13 @@ jobs:
 
       - name: Run test 6 
         run: |
+         echo "Combining character groups"
          echo -n "1 apple" | python app/main.py -E "\d apple"
          echo -n "1 apple" | python app/ast.py -E "\d apple"
  
       - name: Run test 7 
         run: |
+         echo "Start of string anchor"
          set +e  # Allow commands to fail without exiting
          echo -n "log" | python app/main.py -E "^log"
          code1=$? # $? holds the exit code of the last command that was run
@@ -73,6 +80,7 @@ jobs:
 
       - name: Run test 8 
         run: |
+         echo "End of string anchor"
          set +e  # Allow commands to fail without exiting
          echo -n "dog" | python app/main.py -E "dog$"
          code1=$? # $? holds the exit code of the last command that was run
@@ -93,6 +101,7 @@ jobs:
       
       - name: Run test 9
         run: |
+         echo "Match one or more times"
          set +e  # Allow commands to fail without exiting
          echo -n "caats" | python app/main.py -E "ca+ts"
          code1=$?
@@ -127,6 +136,7 @@ jobs:
       
       - name: Run test 10
         run: |
+         echo -e "\033[1m -- Match zero or more times -- \033[0m"
          set +e  # Allow commands to fail without exiting
          echo -n "cat" | python app/main.py -E "ca?t"
          code1=$?
@@ -175,6 +185,7 @@ jobs:
 
       - name: Run test 11
         run: |
+         echo "Wildcard"
          set +e  # Allow commands to fail without exiting
          echo -n "dog" | python app/main.py -E "d.g"
          code1=$?
@@ -208,6 +219,7 @@ jobs:
 
       - name: Run test 12
         run: |
+         echo -e "\033[1m -- Alternation -- \033[0m"
          set +e  # Allow commands to fail without exiting
          echo -n "cat" | python app/main.py -E "(cat|dog)"
          code1=$?
