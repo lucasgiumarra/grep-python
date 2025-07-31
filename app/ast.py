@@ -311,6 +311,18 @@ def match_ast(ast_node, input_line):
                 break
         return True, temp_input
 
+    if isinstance(ast_node, QuantifierNode) and ast_node.type == 'ZERO_OR_ONE':
+        # Match the child once
+        matched_once, remaining_after_one = match_ast(ast_node.child, input_line)
+
+        if matched_once:
+            return True, remaining_after_one
+        
+        # Since it failed once this means there are zero matches.
+        # So just return True and the original input
+        # The subsequent node in the concatenation will be called with the original input
+        return True, input_line
+
     # ... and so on for all other node types ...
 
     # Add a base case for unhandled nodes or simple success (e.g. empty node)
