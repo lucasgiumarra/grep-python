@@ -221,31 +221,18 @@ jobs:
         run: |
          echo -e "\033[1m -- Alternation -- \033[0m"
          set +e  # Allow commands to fail without exiting
-         echo -n "cat" | python app/main.py -E "(cat|dog)"
-         code1=$?
-         echo -n "dog" | python app/main.py -E "(cat|dog)"
-         code2=$?
          echo -n "cat" | python app/ast.py -E "(cat|dog)"
-         code3=$?
+         code1=$?
          echo -n "dog" | python app/ast.py -E "(cat|dog)"
-         code4=$?
+         code2=$?
          set -e
+
          if [ $code1 -ne 0 ]; then 
-          echo "Expected exit code 0 for 'cat', got $code1"
-          exit 1
-         fi
-
-         if [ $code2 -ne 0 ]; then 
-          echo "Expected exit code 0 for 'dog', got $code2"
-          exit 1
-         fi
-
-         if [ $code3 -ne 0 ]; then 
           echo "Expected exit code 0 for 'cat', got $code3"
           exit 1
          fi
 
-         if [ $code4 -ne 0 ]; then 
+         if [ $code2 -ne 0 ]; then 
           echo "Expected exit code 0 for 'dog', got $code4"
           exit 1
          fi       

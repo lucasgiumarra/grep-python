@@ -242,15 +242,12 @@ def match_ast(ast_node, input_line):
     if isinstance(ast_node, CharClassNode):
         if not input_line:
             return False, None
-        
         char = input_line[0]
         matched = False
-
         if ast_node.type == 'digit':
             matched = _is_digit(char)
         elif ast_node.type == 'word':
             matched = _is_word_char(char)
-        
         if matched: 
             return True, input_line[1:] # Consume the character and continue
         else: 
@@ -324,7 +321,16 @@ def match_ast(ast_node, input_line):
         return True, input_line
 
     if isinstance(ast_node, DotNode):
+        if not input_line:
+            return False, None
         return True, input_line[1:]
+
+    # Handle a GroupNode (e.g., (abc))
+    if isinstance(ast_node, GroupNode):
+        # A group node simply executes the match for its child node.
+        # Quantifiers on a group are handled by the QuantifierNode itself.
+        return match_ast(ast_node.child, input_line)
+
     # ... and so on for all other node types ...
 
     # Add a base case for unhandled nodes or simple success (e.g. empty node)
