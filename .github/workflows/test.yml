@@ -111,6 +111,8 @@ jobs:
          code3=$?
          echo -n "caats" | python app/ast.py -E "ca+ts"
          code4=$?
+         echo -n "caaats" | python app/ast.py -E "ca+at"
+         code5=$?
          set -e
          if [ $code1 -ne 0 ]; then
           echo "Expected exit code 0 for 'caats', got $code1"
@@ -131,6 +133,12 @@ jobs:
           echo "Expected exit code 0 for 'caats', got $code4"
           exit 1
          fi
+
+         if [ $code5 -ne 0 ]; then
+          echo "Expected exit code 0 for 'caaats', got $code5"
+          exit 1
+         fi
+
 
          echo "Test passed: correct exit codes received"
       
