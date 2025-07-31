@@ -331,7 +331,18 @@ def match_ast(ast_node, input_line):
         # Quantifiers on a group are handled by the QuantifierNode itself.
         return match_ast(ast_node.child, input_line)
 
-    # ... and so on for all other node types ...
+    # Handle AnchorNode (e.g., ^ or $)
+    if isinstance(ast_node, AnchorNode):
+        if ast_node.type == 'start':
+            # The ^ anchor is implicitly handled by the top-level 'match' function
+            # and should not be a standalone node in this recursive function.
+            # If it is, something is wrong with the parser.
+            return True, input_line
+        elif ast_node.type == 'end':
+            # The $ anchor matches only if the input is exhausted.
+            if not input_line:
+                return True, input_line
+            return False, None
 
     # Add a base case for unhandled nodes or simple success (e.g. empty node)
     return False, None # Fallback if node type not handled
