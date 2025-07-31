@@ -318,6 +318,7 @@ def match_ast(ast_node, input_line):
 
 
 def main():
+    input_str = sys.argv[1]
     pattern_str = sys.argv[2]
     input_line = sys.stdin.read()
     #.strip() # Use strip() to remove trailing newline
@@ -326,8 +327,10 @@ def main():
         print("Expected first argument to be '-E'", file=sys.stderr)
         exit(1)
 
-    print("Logs from your program will appear here!", file=sys.stderr)
-    print(f"\npattern string: {pattern_str}\n", file=sys.stderr)
+    print("\nLogs from your program will appear here!", file=sys.stderr)
+    print(f"\ninput_str: {input_str}", file=sys.stderr)
+    print(f"pattern string: {pattern_str}\n", file=sys.stderr)
+    
 
     try:
         # Phase 1: Parse the regex string into an AST
