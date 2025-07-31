@@ -323,6 +323,8 @@ def match_ast(ast_node, input_line):
         # The subsequent node in the concatenation will be called with the original input
         return True, input_line
 
+    if isinstance(ast_node, DotNode):
+        return True, input_line[1:]
     # ... and so on for all other node types ...
 
     # Add a base case for unhandled nodes or simple success (e.g. empty node)
