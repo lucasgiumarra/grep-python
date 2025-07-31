@@ -318,7 +318,7 @@ def match_ast(ast_node, input_line):
 
 
 def main():
-    input_str = sys.argv[1]
+    # input_str = sys.argv[1]
     pattern_str = sys.argv[2]
     input_line = sys.stdin.read()
     #.strip() # Use strip() to remove trailing newline
@@ -328,7 +328,7 @@ def main():
         exit(1)
 
     print("\nLogs from your program will appear here!", file=sys.stderr)
-    print(f"\ninput_str: {input_str}", file=sys.stderr)
+    print(f"\ninput_line: {input_line}", file=sys.stderr)
     print(f"pattern string: {pattern_str}\n", file=sys.stderr)
     
 
