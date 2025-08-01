@@ -318,22 +318,26 @@ def match_ast(ast_node, input_line):
             return False, None
         
         temp_input = current_input
-        iterator = ast_node.walk()
+        old_temp_input = ""
         while True:
             m, next_input = match_ast(ast_node._child, temp_input)
-            try:
-                this_node = next(iterator)
-                next_node = next(iterator)
-                print(f"next_node: {next_node}", file=sys.stderr)
-            except StopIteration:
-                print("StopIteration", file=sys.stderr)
-            # m, next_input = match_ast(next_node, temp_input)
+            
             print(f"ast_node._child: {ast_node._child}", file=sys.stderr)
             print(f"temp_input: {temp_input}, m: {m}, next_input: {next_input}", file=sys.stderr)
             if m:
+                old_temp_input = temp_input
                 temp_input = next_input
             else:
                 break
+        iterator = ast_node.walk()
+        try:
+                this_node = next(iterator)
+                next_node = next(iterator)
+                print(f"next_node: {next_node}", file=sys.stderr)
+                if match_ast(next_node, temp_input):
+                    return True, old_temp_input
+        except StopIteration:
+                print("StopIteration", file=sys.stderr)
         return True, temp_input
 
     if isinstance(ast_node, QuantifierNode) and ast_node.type == 'ZERO_OR_ONE':
