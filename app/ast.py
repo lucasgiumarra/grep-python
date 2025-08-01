@@ -313,13 +313,13 @@ def match_ast(ast_node, input_line):
     # # Example for QuantifierNode (ONE_OR_MORE):
     if isinstance(ast_node, QuantifierNode) and ast_node.type == 'ONE_OR_MORE':
         # Must match at least once
-        first_match, current_input = match_ast(ast_node.child, input_line)
+        first_match, current_input = match_ast(ast_node._child, input_line)
         if not first_match:
             return False, None
         
         temp_input = current_input
         while True:
-            m, next_input = match_ast(ast_node.child, temp_input)
+            m, next_input = match_ast(ast_node._child, temp_input)
             print(f"ast_node.child: {ast_node.child}", file=sys.stderr)
             print(f"temp_input: {temp_input}, m: {m}, next_input: {next_input}", file=sys.stderr)
             if m:
@@ -330,7 +330,7 @@ def match_ast(ast_node, input_line):
 
     if isinstance(ast_node, QuantifierNode) and ast_node.type == 'ZERO_OR_ONE':
         # Match the child once
-        matched_once, remaining_after_one = match_ast(ast_node.child, input_line)
+        matched_once, remaining_after_one = match_ast(ast_node._child, input_line)
         if matched_once:
             return True, remaining_after_one
         # Since it failed once this means there are zero matches.
