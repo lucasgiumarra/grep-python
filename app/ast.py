@@ -318,8 +318,15 @@ def match_ast(ast_node, input_line):
             return False, None
         
         temp_input = current_input
+        iterator = ast_node.walk()
         while True:
             m, next_input = match_ast(ast_node._child, temp_input)
+            try:
+                next_node = next(iterator)
+                print(f"next_node: {next_node}", file=sys.stderr)
+            except StopIteration:
+                print("StopIteration", file=sys.stderr)
+            # m, next_input = match_ast(next_node, temp_input)
             print(f"ast_node._child: {ast_node._child}", file=sys.stderr)
             print(f"temp_input: {temp_input}, m: {m}, next_input: {next_input}", file=sys.stderr)
             if m:
