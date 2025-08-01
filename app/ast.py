@@ -322,7 +322,8 @@ def match_ast(ast_node, input_line):
         while True:
             m, next_input = match_ast(ast_node._child, temp_input)
             try:
-                next_node = next(next(iterator))
+                this_node = next(iterator)
+                next_node = next(iterator)
                 print(f"next_node: {next_node}", file=sys.stderr)
             except StopIteration:
                 print("StopIteration", file=sys.stderr)
