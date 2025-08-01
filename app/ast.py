@@ -334,8 +334,12 @@ def match_ast(ast_node, input_line):
                 this_node = next(iterator)
                 next_node = next(iterator)
                 print(f"next_node: {next_node}", file=sys.stderr)
+                if match_ast(next_node, temp_input):
+                    return True, temp_input
                 if match_ast(next_node, old_temp_input):
                     return True, old_temp_input
+                else:
+                    return False, None
         except StopIteration:
                 print("StopIteration", file=sys.stderr)
         return True, temp_input
