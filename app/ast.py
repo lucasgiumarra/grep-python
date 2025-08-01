@@ -300,6 +300,7 @@ def match_ast(ast_node, input_line):
         temp_input = current_input
         while True:
             m, next_input = match_ast(ast_node.child, temp_input)
+            print(f"ast_node.child: {ast_node.child}", file=sys.stderr)
             print(f"temp_input: {temp_input}, m: {m}, next_input: {next_input}", file=sys.stderr)
             if m:
                 temp_input = next_input
