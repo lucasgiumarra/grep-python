@@ -304,7 +304,7 @@ def match_ast(ast_node, input_line):
 
     # Example for AlternationNode:
     if isinstance(ast_node, AlternationNode):
-        for branch_node in ast_node.branches:
+        for branch_node in ast_node._branches:
             matched, remaining = match_ast(branch_node, input_line)
             if matched:
                 return True, remaining
@@ -320,7 +320,7 @@ def match_ast(ast_node, input_line):
         temp_input = current_input
         while True:
             m, next_input = match_ast(ast_node._child, temp_input)
-            print(f"ast_node.child: {ast_node.child}", file=sys.stderr)
+            print(f"ast_node._child: {ast_node._child}", file=sys.stderr)
             print(f"temp_input: {temp_input}, m: {m}, next_input: {next_input}", file=sys.stderr)
             if m:
                 temp_input = next_input
@@ -347,7 +347,7 @@ def match_ast(ast_node, input_line):
     if isinstance(ast_node, GroupNode):
         # A group node simply executes the match for its child node.
         # Quantifiers on a group are handled by the QuantifierNode itself.
-        return match_ast(ast_node.child, input_line)
+        return match_ast(ast_node._child, input_line)
 
     # Handle AnchorNode (e.g., ^ or $)
     if isinstance(ast_node, AnchorNode):
