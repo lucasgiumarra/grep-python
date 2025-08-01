@@ -24,12 +24,12 @@ class LiteralNode(Node):
 
 class GroupNode(Node):
     def __init__(self, child):
-        self.child = child # A single Node representing the group's content
+        self._child = child # A single Node representing the group's content
     @property
     def children(self):
-        return [self.child]
+        return [self._child]
     def __repr__(self):
-        return f"GroupNode('{self.child!r}')"
+        return f"GroupNode('{self.children[0]!r}')"
        
 class CharClassNode(Node): # For /d, /w, etc.
     def __init__(self, type):
@@ -48,10 +48,10 @@ class CharSetNode(Node): # For [...]
 
 class ConcatenationNode(Node):
     def __init__(self, children):
-        self.children = children # List of Nodes
+        self._children = children # List of Nodes
     @property
     def children(self):
-        return []
+        return self._children
     def __repr__(self):
         return f"ConcatenationNode('{self.children!r}')"
 
@@ -64,23 +64,23 @@ class AnchorNode(Node):
 
 class AlternationNode(Node):
     def __init__(self, branches):
-        self.branches = branches # List of Nodes (each a branch)
+        self._branches = branches # List of Nodes (each a branch)
     @property
     def children(self):
-        return self.branches
+        return self._branches
     def __repr__(self):
-        return f"AlternationNode(branches='{self.branches}')"
+        return f"AlternationNode(branches='{self.children!r}')"
 
 class QuantifierNode(Node):
     def __init__(self, child, type, greedy=True):
-        self.child = child
+        self._child = child
         self.type = type # e.g., 'ONE_OR_MORE', 'ZERO_OR_MORE', 'ZERO_OR_ONE'
         self.greedy = greedy # For future non-greedy support
     @property
     def children(self):
-        return [self.child]
+        return [self._child]
     def __repr__(self):
-        return f"QuantifierNode(child={self.child!r}, type='{self.type}', greedy={self.greedy})"
+        return f"QuantifierNode(child={self.children[0]!r}, type='{self.type}', greedy={self.greedy})"
 
 
 class RegexParser: 
