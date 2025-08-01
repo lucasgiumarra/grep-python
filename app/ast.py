@@ -4,6 +4,13 @@ class Node:
     def __repr__(self):
         # A generic representation, can be overwritten by subclasses
         return self.__class__.__name__
+    @property
+    def children(self):
+        return []
+    def walk(self):
+        yield self
+        for child in self.children:
+            yield from child.walk()
 
 class DotNode(Node):
     def __repr__(self):
@@ -18,6 +25,9 @@ class LiteralNode(Node):
 class GroupNode(Node):
     def __init__(self, child):
         self.child = child # A single Node representing the group's content
+    @property
+    def children(self):
+        return [self.child]
     def __repr__(self):
         return f"GroupNode('{self.child!r}')"
        
@@ -39,8 +49,12 @@ class CharSetNode(Node): # For [...]
 class ConcatenationNode(Node):
     def __init__(self, children):
         self.children = children # List of Nodes
+    @property
+    def children(self):
+        return []
     def __repr__(self):
         return f"ConcatenationNode('{self.children!r}')"
+
 
 class AnchorNode(Node):
     def __init__(self, type):
@@ -51,6 +65,9 @@ class AnchorNode(Node):
 class AlternationNode(Node):
     def __init__(self, branches):
         self.branches = branches # List of Nodes (each a branch)
+    @property
+    def children(self):
+        return self.branches
     def __repr__(self):
         return f"AlternationNode(branches='{self.branches}')"
 
@@ -59,6 +76,9 @@ class QuantifierNode(Node):
         self.child = child
         self.type = type # e.g., 'ONE_OR_MORE', 'ZERO_OR_MORE', 'ZERO_OR_ONE'
         self.greedy = greedy # For future non-greedy support
+    @property
+    def children(self):
+        return [self.child]
     def __repr__(self):
         return f"QuantifierNode(child={self.child!r}, type='{self.type}', greedy={self.greedy})"
 
@@ -367,10 +387,16 @@ def main():
         ast = parser.parse()
         print("AST built successfully!", file=sys.stderr)
 
-        print("\n--- AST Representation ---", file=sys.stderr)
-        print_ast(ast, prefix="")
-        print("--------------------------\n", file=sys.stderr)
+        # print("\n--- AST Representation ---", file=sys.stderr)
+        # print_ast(ast, prefix="")
+        # print("--------------------------\n", file=sys.stderr)
         # **************************************
+
+        print("\n--- AST Node Walkthrough ---", file=sys.stderr)
+        for node in ast.walk():
+            # This will print each node in a depth-first (pre-order) traversal
+            print(f"- {node!r}", file=sys.stderr)
+        print("----------------------------\n", file=sys.stderr)
 
         # Phase 2: Match the AST against the input line
         if pattern_str.startswith("^"):
