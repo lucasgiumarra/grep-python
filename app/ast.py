@@ -223,29 +223,6 @@ def _is_digit(char):
 def _is_word_char(char):
     return char.isalnum() or char == '_'
 
-def match_zero_or_more_helper(child_node, input_str):
-    """
-    Helper for greedy X* matching with backtracking.
-    It returns the input string that leads to a successful overall match.
-    """
-    # Base case: try to match zero times.
-    # The current call to match_ast from the ConcatenationNode will proceed
-    # with `input_str` as the starting point for the next sibling node.
-    # This is our base case for backtracking.
-    
-    # Try to match the child greedily.
-    matched, next_input = match_ast(child_node, input_str)
-    
-    if matched:
-        # If we matched the child, try to match more instances of the child.
-        matched_more, final_input = match_zero_or_more_helper(child_node, next_input)
-        if matched_more:
-            return True, final_input
-        
-    # If the greedy path fails (either no match or recursive call fails),
-    # this is the backtracking step. We return a success, consuming none of the current input.
-    return True, input_str
-
 def match_ast(ast_node, input_line):
     """
     Attempts to match the AST node against the input_line.
@@ -320,13 +297,15 @@ def match_ast(ast_node, input_line):
         if not first_match:
             return False, None
         
+        temp_input = current_input
         while True:
-            matched, next_input = match_ast(ast_node.child, current_input)
-            if matched:
-                current_input = next_input
+            m, next_input = match_ast(ast_node.child, temp_input)
+            print(f"temp_input: {temp_input}, m: {m}, next_input: {next_input}", file=sys.stderr)
+            if m:
+                temp_input = next_input
             else:
                 break
-        return True, current_input 
+        return True, temp_input
 
     if isinstance(ast_node, QuantifierNode) and ast_node.type == 'ZERO_OR_ONE':
         # Match the child once
