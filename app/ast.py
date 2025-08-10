@@ -22,14 +22,15 @@ class LiteralNode(Node):
     def __repr__(self):
         return f"LiteralNode('{self.char}')"
 
-class GroupNode(Node):
-    def __init__(self, child):
+class CaptureGroupNode(Node):
+    def __init__(self, child, index):
         self._child = child # A single Node representing the group's content
+        self.index = index # The index of this capturing
     @property
     def children(self):
         return [self._child]
     def __repr__(self):
-        return f"GroupNode('{self.children[0]!r}')"
+        return f"CaptureGroupNode(index={self.index}, child={self.children[0]!r})"
        
 class CharClassNode(Node): # For /d, /w, etc.
     def __init__(self, type):
@@ -54,6 +55,13 @@ class ConcatenationNode(Node):
         return self._children
     def __repr__(self):
         return f"ConcatenationNode('{self.children!r}')"
+        
+
+class BackreferenceNode(Node):
+    def __init__(self, index):
+        self.index = index # The number of the group to refer to (e.g., 1 for \1)
+    def __repr__(self):
+        return f"BackreferenceNode(index={self.index})"
 
 
 class AnchorNode(Node):
@@ -87,6 +95,7 @@ class RegexParser:
     def __init__(self, pattern):
         self.pattern = pattern
         self.pos = 0 # current position in pattern string
+        self.group_count = 0 # Add a counter for capturing groups
     
     def parse(self):
         # Top-level parsing: handles alternation
@@ -136,7 +145,9 @@ class RegexParser:
         node = None
         if char == '(':
             self._consume('(')
-            node = GroupNode(self._parse_alternation()) # Group can contain an alternation
+            self.group_count += 1 # Increment for a new capture
+            group_index = self.group_count
+            node = CaptureGroupNode(self._parse_alternation(), group_index) # Group can contain an alternation
             self._expect(')')
         elif char == '[':
             node = self._parse_char_set()
@@ -189,6 +200,11 @@ class RegexParser:
         print(f"escaped_char: {escaped_char}", file=sys.stderr)
         if escaped_char is None:
             raise ValueError("Incomplete escape sequence")
+
+        if escaped_char.isdigit():
+            self._consume(escaped_char)
+            return BackreferenceNode(int(escaped_char))
+
         self._consume(escaped_char)
         if escaped_char == 'd':
             print("digit", file=sys.stderr)
@@ -227,7 +243,7 @@ def print_ast(node, level=0, prefix=""):
         children_to_print = []
         if isinstance(node, (ConcatenationNode, AlternationNode)):
             children_to_print.extend(node.children if hasattr(node, 'children') else node.branches)
-        elif isinstance(node, (GroupNode, QuantifierNode)):
+        elif isinstance(node, (CaptureGroupNode, QuantifierNode)):
             if hasattr(node, 'child') and node.child is not None:
                 children_to_print.append(node.child)
 
@@ -243,7 +259,7 @@ def _is_digit(char):
 def _is_word_char(char):
     return char.isalnum() or char == '_'
 
-def match_ast(ast_node, input_line):
+def match_ast(ast_node, input_line, captures):
     """
     Attempts to match the AST node against the input_line.
     Returns (True, remaining_input) on success, (False, None) on failure.
@@ -293,60 +309,83 @@ def match_ast(ast_node, input_line):
         else:
             return False, None
 
-    #Example for ConcatenationNode:
     if isinstance(ast_node, ConcatenationNode):
-        current_input = input_line
-        for child_node in ast_node.children:
-            matched, current_input = match_ast(child_node, current_input)
-            if not matched:
+        # For a concatenation (like 'abc'), we match a sequence of nodes.
+        # This requires a backtracking mechanism to handle greedy quantifiers
+        # like `+` and `*` which might consume too many characters.
+        def match_concatenation_recursive(child_nodes, current_input, captures):
+            # Base case: If we've matched all child nodes, the concatenation is a success.
+            if not child_nodes:
+                return True, current_input
+
+            first_node = child_nodes[0]
+            rest_of_nodes = child_nodes[1:]
+
+            # print(f"first node: {first_node}", file=sys.stderr)
+            # print(f"rest of nodes: {rest_of_nodes}", file=sys.stderr)
+
+            # Special logic for greedy quantifiers (`+`, `*`) which need to backtrack
+            if isinstance(first_node, QuantifierNode) and first_node.type in ['ONE_OR_MORE', 'ZERO_OR_MORE']:
+                
+                # Step 1: Collect all possible ways the quantifier can match.
+                # `possible_inputs_for_next_node` will store the remaining string
+                # after each potential match length of the quantifier.
+                possible_inputs_for_next_node = []
+                
+                # For `*`, a zero-length match is possible. The next node would start
+                # from the same place.
+                if first_node.type == 'ZERO_OR_MORE':
+                    possible_inputs_for_next_node.append(current_input)
+                
+                # Now, match the quantifier's child pattern one or more times.
+                temp_input = current_input
+                while True:
+                    matched, temp_input_after_match = match_ast(first_node._child, temp_input, captures)
+                    
+                    # We only continue if a match occurred AND it consumed characters.
+                    # This prevents infinite loops on patterns like `(a*)*`.
+                    if matched and len(temp_input_after_match) < len(temp_input):
+                        possible_inputs_for_next_node.append(temp_input_after_match)
+                        temp_input = temp_input_after_match
+                    else:
+                        break
+                
+                # Step 2: Backtrack. Try each possibility, starting from the longest (greediest) match.
+                for input_for_next_node in reversed(possible_inputs_for_next_node):
+                    # Recursively try to match the rest of the nodes in the concatenation.
+                    # NOTE: A failed branch might leave partial captures. So we pass a copy.
+                    matched_rest, final_input = match_concatenation_recursive(rest_of_nodes, input_for_next_node, captures.copy())
+                    if matched_rest:
+                        # We found a full match!
+                        return True, final_input
+                
+                # If we've tried all possibilities for the quantifier and none allowed the rest
+                # of the pattern to match, then this path fails.
                 return False, None
-        return True, current_input
+
+            else: # For any other node (literal, `?`, group, etc.)
+                # Match the first node normally.
+                matched, input_after_first = match_ast(first_node, current_input, captures)
+                if matched:
+                    # If it matched, recursively try to match the rest of the nodes.
+                    return match_concatenation_recursive(rest_of_nodes, input_after_first, captures)
+                else:
+                    return False, None
+
+        return match_concatenation_recursive(ast_node._children, input_line, captures)    
 
     # Example for AlternationNode:
     if isinstance(ast_node, AlternationNode):
         for branch_node in ast_node._branches:
-            matched, remaining = match_ast(branch_node, input_line)
+            # Pass a copy of captures to prevent a failed branch from altering the state for the next branch.
+            matched, remaining = match_ast(branch_node, input_line, captures.copy())
             if matched:
                 return True, remaining
         return False, None
 
-    # # Example for QuantifierNode (ONE_OR_MORE):
-    if isinstance(ast_node, QuantifierNode) and ast_node.type == 'ONE_OR_MORE':
-        # Must match at least once
-        first_match, current_input = match_ast(ast_node._child, input_line)
-        if not first_match:
-            return False, None
-        
-        temp_input = current_input
-        old_temp_input = ""
-        while True:
-            m, next_input = match_ast(ast_node._child, temp_input)
-            
-            print(f"ast_node._child: {ast_node._child}", file=sys.stderr)
-            print(f"temp_input: {temp_input}, m: {m}, next_input: {next_input}, old_temp_input: {old_temp_input}", file=sys.stderr)
-            if m:
-                old_temp_input = temp_input
-                temp_input = next_input
-            else:
-                break
-        iterator = ast_node.walk()
-        try:
-                this_node = next(iterator)
-                next_node = next(iterator)
-                print(f"next_node: {next_node}", file=sys.stderr)
-                if match_ast(next_node, temp_input):
-                    return True, temp_input
-                if match_ast(next_node, old_temp_input):
-                    return True, old_temp_input
-                else:
-                    return False, None
-        except StopIteration:
-                print("StopIteration", file=sys.stderr)
-        return True, temp_input
-
     if isinstance(ast_node, QuantifierNode) and ast_node.type == 'ZERO_OR_ONE':
         # Match the child once
-        matched_once, remaining_after_one = match_ast(ast_node._child, input_line)
+        matched_once, remaining_after_one = match_ast(ast_node._child, input_line, captures)
         if matched_once:
             return True, remaining_after_one
         # Since it failed once this means there are zero matches.
@@ -359,11 +398,34 @@ def match_ast(ast_node, input_line):
             return False, None
         return True, input_line[1:]
 
-    # Handle a GroupNode (e.g., (abc))
-    if isinstance(ast_node, GroupNode):
+    # Handle a CaptureGroupNode (e.g., (abc))
+    if isinstance(ast_node, CaptureGroupNode):
+        matched, remaining_input = match_ast(ast_node._child, input_line, captures)
+        if matched:
+            # If the child matched, calculate the text that was consumed
+            consumed_length = len(input_line) - len(remaining_input)
+            captured_text = input_line[:consumed_length]
+
+            # Store the captrued text in our state array at the correct index
+            # Ensure captures list is long enough
+            while len(captures) <= ast_node.index:
+                captures.append(None)
+            captures[ast_node.index] = captured_text
         # A group node simply executes the match for its child node.
         # Quantifiers on a group are handled by the QuantifierNode itself.
-        return match_ast(ast_node._child, input_line)
+        return matched, remaining_input 
+
+    if isinstance(ast_node, BackreferenceNode):
+        # Look up the text that was previously captured by this group.
+        if ast_node.index < len(captures) and captures[ast_node.index] is not None:
+            text_to_match = captures[ast_node.index]
+            # Check if the current input starts with that exact text.
+            if input_line.startswith(text_to_match):
+                # If so, consume that text and return success.
+                return True, input_line[len(text_to_match):]
+
+        # If the group hasn't captured anything yet or the text doesn't match.
+        return False, None
 
     # Handle AnchorNode (e.g., ^ or $)
     if isinstance(ast_node, AnchorNode):
@@ -401,12 +463,11 @@ def main():
         # Phase 1: Parse the regex string into an AST
         parser = RegexParser(pattern_str)
         ast = parser.parse()
-        print("AST built successfully!", file=sys.stderr)
 
-        # print("\n--- AST Representation ---", file=sys.stderr)
-        # print_ast(ast, prefix="")
-        # print("--------------------------\n", file=sys.stderr)
-        # **************************************
+        # Initialize the captures list. It needs space for all potential groups.
+        # Use parser.group_count. Index 0 is unused, so add 1.
+        initial_captures = [None] * (parser.group_count + 1)
+        print("AST built successfully!", file=sys.stderr)
 
         print("\n--- AST Node Walkthrough ---", file=sys.stderr)
         for node in ast.walk():
@@ -417,7 +478,8 @@ def main():
         # Phase 2: Match the AST against the input line
         if pattern_str.startswith("^"):
             # If pattern starts with '^', match only from the beginning of the input
-            matched, _ = match_ast(ast, input_line) # match_ast would start from pattern[1:] for the ^ logic
+            captures_for_this_attempt = [None] * (parser.group_count + 1)
+            matched, _ = match_ast(ast, input_line, captures_for_this_attempt) # match_ast would start from pattern[1:] for the ^ logic
             if matched:
                 print("exit 0", file=sys.stderr)
                 exit(0)
@@ -427,14 +489,16 @@ def main():
             # For simplicity for now, the `$` anchor node should handle this.
             # The general match loop below will try at all positions.
             for i in range(len(input_line) + 1):
-                matched, remaining_input = match_ast(ast, input_line[i:])
+                captures_for_this_attempt = [None] * (parser.group_count + 1)
+                matched, remaining_input = match_ast(ast, input_line[i:], captures_for_this_attempt)
                 if matched and not remaining_input: # Match entire pattern, and input must be exhausted
                     print("exit 0", file=sys.stderr)
                     exit(0)
 
         else: # General match anywhere
             for i in range(len(input_line) + 1):
-                matched, _ = match_ast(ast, input_line[i:])
+                captures_for_this_attempt = [None] * (parser.group_count + 1)
+                matched, _ = match_ast(ast, input_line[i:], captures_for_this_attempt)
                 if matched:
                     print("exit 0", file=sys.stderr)
                     exit(0)
