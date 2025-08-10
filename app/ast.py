@@ -392,6 +392,29 @@ def match_ast(ast_node, input_line, captures):
         # So just return True and the original input
         # The subsequent node in the concatenation will be called with the original input
         return True, input_line
+    
+    if isinstance(ast_node, QuantifierNode) and ast_node.type in ['ONE_OR_MORE', 'ZERO_OR_MORE']:
+        min_matches = 1 if ast_node.type == 'ONE_OR_MORE' else 0
+        match_count = 0
+
+        current_input = input_line
+        
+        # Greedily consume input by matching the child node repeatedly
+        while True:
+            matched, next_input = match_ast(ast_node._child, current_input, captures)
+
+            # Keep going as long as the match succeeds and consumes characters
+            if matched and len(next_input) < len(current_input):
+                current_input = next_input
+                match_count += 1
+            else:
+                break
+        
+        # After trying to match as much as possible, check if we met the minimum requirement
+        if match_count >= min_matches:
+            return True, current_input
+        else: 
+            return False, None
 
     if isinstance(ast_node, DotNode):
         if not input_line:
