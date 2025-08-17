@@ -98,10 +98,6 @@ echo ""
 # --- Run test 9: Match one or more times ---
 echo "Match one or more times"
 set +e  # Allow commands to fail without exiting
-echo -n "caats" | python3 app/main.py -E "ca+ts"
-code1=$?
-echo -n "ca" | python3 app/main.py -E "ca+t"
-code2=$?
 echo -n "ca" | python3 app/ast.py -E "ca+t"
 code3=$?
 echo -n "caats" | python3 app/ast.py -E "ca+ts"
@@ -109,16 +105,6 @@ code4=$?
 echo -n "caaats" | python3 app/ast.py -E "ca+at"
 code5=$?
 set -e
-
-if [ $code1 -ne 0 ]; then
-  echo "Expected exit code 0 for 'caats', got $code1"
-  exit 1
-fi
-
-if [ $code2 -ne 1 ]; then
-  echo "Expected exit code 1 for 'ca', got $code2"
-  exit 1
-fi
 
 if [ $code3 -ne 1 ]; then
   echo "Expected exit code 1 for 'ca', got $code3"
@@ -277,5 +263,123 @@ fi
 echo "Test 13 passed."
 echo ""
 
+echo " ------------------------------------------------ "
+echo -e "\033[1m -- Multiple Backreferences -- \033[0m"
+echo " ------------------------------------------------ "
+
+set +e  # Allow commands to fail without exiting
+echo -n "3 red squares and 3 red circles" | python3 app/ast.py -E "(\d+) (\w+) squares and \1 \2 circles" 
+code1=$?
+echo -n "3 red squares and 4 red circles" | python3 app/ast.py -E "(\d+) (\w+) squares and \1 \2 circles" 
+code2=$?
+set -e
+
+if [ $code1 -ne 0 ]; then
+  echo "Expected exit code 0 for '3 red squares and 3 red circles', got $code1"
+  exit 0
+else 
+  echo "test passed for 3 red squares and 3 red circles with ... (\d+) (\w+) squares and \1 \2 circles"
+fi
+
+if [ $code2 -ne 1 ]; then
+  echo "Expected exit code 1 for '3 red squares and 4 red circles', got $code1"
+  exit 0
+else 
+  echo "test passed for 3 red squares and 4 red circles with ... (\d+) (\w+) squares and \1 \2 circles"
+fi
+
+echo "Test 14 passed."
+echo ""
+
+echo " ------------------------------------------------ "
+echo -e "\033[1m -- Nested Backreferences -- \033[0m"
+echo " ------------------------------------------------ "
+
+set +e  # Allow commands to fail without exiting
+echo -n "'cat and cat' is the same as 'cat and cat'" | python3 app/ast.py -E "('(cat) and \2') is the same as \1" 
+code1=$?
+echo -n "'cat and cat' is the same as 'cat and dog'" | python3 app/ast.py -E "('(cat) and \2') is the same as \1" 
+code2=$?
+set -e
+
+if [ $code1 -ne 0 ]; then
+  echo "Expected exit code 0 for ''cat and cat' is the same as 'cat and cat'', got $code1"
+  exit 0
+else 
+  echo "test passed for 'cat and cat' is the same as 'cat and cat' with ... ('(cat) and \2') is the same as \1"
+fi
+
+if [ $code2 -ne 1 ]; then
+  echo "Expected exit code 1 for 'cat and cat' is the same as 'cat and dog', got $code1"
+  exit 0
+else 
+  echo "test passed for 'cat and cat' is the same as 'cat and dog' with ... ('(cat) and \2') is the same as \1"
+fi
+
+echo "Test 15 passed."
+echo ""
+
+
+echo " ------------------------------------------------ "
+echo -e "\033[1m -- Search a single-line file -- \033[0m"
+echo " ------------------------------------------------ "
+
+# 1. Setup: Create the file we'll search in.
+echo "the apple does not land far from the tree" > fruits.txt
+
+# 2. Test Case: A pattern that SHOULD match.
+echo "  - Testing for a successful match..."
+
+# Run the program and capture its output and exit code.
+output=$(python3 app/ast.py -E "appl.*" fruits.txt)
+exit_code=$?
+
+# Verify the output
+if [ "$output" != "the apple does not land far from the tree" ]; then
+  echo "    [FAIL] Expected output 'the apple does not land far from the tree', but got '$output'"
+  exit 1
+fi
+
+# Verify the exit code
+if [ $exit_code -ne 0 ]; then
+  echo "    [FAIL] Expected exit code 0, but got $exit_code"
+  exit 1
+fi
+
+echo "      [PASS] Correct output and exit code 0."
+
+
+# 3. Test Case: A pattern that SHOULD NOT match.
+echo "  - Testing for a failed match..."
+
+# Temporarily disable 'exit on error' because we EXPECT a non-zero exit code.
+set +e
+output=$(python3 app/ast.py -E "carrot" fruits.txt)
+exit_code=$?
+# Re-enable 'exit on error'
+set -e
+
+# Verify the output (should be empty)
+if [ -n "$output" ]; then
+  echo "    [FAIL] Expected empty output, but got '$output'"
+  exit 1
+fi
+
+# Verify the exit code
+if [ $exit_code -ne 1 ]; then
+  echo "    [FAIL] Expected exit code 1, but got $exit_code"
+  exit 1
+fi
+
+echo "      [PASS] Correct empty output and exit code 1."
+
+
+# 4. Cleanup: Remove the test file.
+rm fruits.txt
+
+echo "Test 16 passed."
+echo ""
+
 echo "All tests passed successfully!"
 echo ""
+
